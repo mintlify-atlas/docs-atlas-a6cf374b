@@ -1,0 +1,741 @@
+---
+title: "Shapes Functions"
+description: "2D shape drawing functions for primitives like rectangles, circles, lines, and polygons"
+---
+
+## Overview
+
+Shapes functions provide 2D primitive drawing capabilities including rectangles, circles, lines, triangles, and polygons.
+
+## Pixel and Line Drawing
+
+### drawPixel
+
+Draws a pixel.
+
+<ParamField path="posX" type="Number" required>
+  X position
+</ParamField>
+
+<ParamField path="posY" type="Number" required>
+  Y position
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Pixel color
+</ParamField>
+
+```wren
+Raylib.drawPixel(100, 100, Color.Red)
+```
+
+### drawPixelV
+
+Draws a pixel using a Vector2.
+
+<ParamField path="position" type="Vector2" required>
+  Pixel position
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Pixel color
+</ParamField>
+
+```wren
+Raylib.drawPixelV(Vector2.new(100, 100), Color.Red)
+```
+
+### drawLine
+
+Draws a line.
+
+<ParamField path="startPosX" type="Number" required>
+  Start X position
+</ParamField>
+
+<ParamField path="startPosY" type="Number" required>
+  Start Y position
+</ParamField>
+
+<ParamField path="endPosX" type="Number" required>
+  End X position
+</ParamField>
+
+<ParamField path="endPosY" type="Number" required>
+  End Y position
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Line color
+</ParamField>
+
+```wren
+import "raylib" for Raylib, Color
+
+Raylib.initWindow(800, 450, "Shapes Example")
+
+while (!Raylib.windowShouldClose()) {
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  // Draw horizontal line
+  Raylib.drawLine(100, 100, 700, 100, Color.Black)
+  
+  // Draw vertical line
+  Raylib.drawLine(400, 50, 400, 400, Color.Blue)
+  
+  Raylib.endDrawing()
+}
+```
+
+### drawLineV
+
+Draws a line using Vector2 points.
+
+<ParamField path="startPos" type="Vector2" required>
+  Start position
+</ParamField>
+
+<ParamField path="endPos" type="Vector2" required>
+  End position
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Line color
+</ParamField>
+
+```wren
+var start = Vector2.new(100, 100)
+var end = Vector2.new(200, 200)
+Raylib.drawLineV(start, end, Color.Red)
+```
+
+### drawLineEx
+
+Draws a line with thickness.
+
+<ParamField path="startPos" type="Vector2" required>
+  Start position
+</ParamField>
+
+<ParamField path="endPos" type="Vector2" required>
+  End position
+</ParamField>
+
+<ParamField path="thick" type="Number" required>
+  Line thickness
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Line color
+</ParamField>
+
+```wren
+var start = Vector2.new(100, 100)
+var end = Vector2.new(200, 200)
+Raylib.drawLineEx(start, end, 5.0, Color.Red)  // 5 pixels thick
+```
+
+### drawLineBezier
+
+Draws a cubic Bezier line.
+
+<ParamField path="startPos" type="Vector2" required>
+  Start position
+</ParamField>
+
+<ParamField path="endPos" type="Vector2" required>
+  End position
+</ParamField>
+
+<ParamField path="thick" type="Number" required>
+  Line thickness
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Line color
+</ParamField>
+
+```wren
+Raylib.drawLineBezier(Vector2.new(100, 200), Vector2.new(700, 200), 3.0, Color.Purple)
+```
+
+## Circle Drawing
+
+### drawCircle
+
+Draws a filled circle.
+
+<ParamField path="centerX" type="Number" required>
+  Center X position
+</ParamField>
+
+<ParamField path="centerY" type="Number" required>
+  Center Y position
+</ParamField>
+
+<ParamField path="radius" type="Number" required>
+  Circle radius
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Circle color
+</ParamField>
+
+```wren
+Raylib.drawCircle(400, 225, 50, Color.Red)
+```
+
+### drawCircleV
+
+Draws a circle using Vector2 for center.
+
+<ParamField path="center" type="Vector2" required>
+  Circle center
+</ParamField>
+
+<ParamField path="radius" type="Number" required>
+  Circle radius
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Circle color
+</ParamField>
+
+```wren
+var center = Vector2.new(400, 225)
+Raylib.drawCircleV(center, 50, Color.Blue)
+```
+
+### drawCircleLines
+
+Draws circle outline.
+
+<ParamField path="centerX" type="Number" required>
+  Center X
+</ParamField>
+
+<ParamField path="centerY" type="Number" required>
+  Center Y
+</ParamField>
+
+<ParamField path="radius" type="Number" required>
+  Circle radius
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Outline color
+</ParamField>
+
+```wren
+Raylib.drawCircleLines(400, 225, 50, Color.DarkBlue)
+```
+
+### drawCircleGradient
+
+Draws a gradient-filled circle.
+
+<ParamField path="centerX" type="Number" required>
+  Center X
+</ParamField>
+
+<ParamField path="centerY" type="Number" required>
+  Center Y
+</ParamField>
+
+<ParamField path="radius" type="Number" required>
+  Circle radius
+</ParamField>
+
+<ParamField path="color1" type="Color" required>
+  Center color
+</ParamField>
+
+<ParamField path="color2" type="Color" required>
+  Edge color
+</ParamField>
+
+```wren
+Raylib.drawCircleGradient(400, 225, 60, Color.Green, Color.SkyBlue)
+```
+
+## Rectangle Drawing
+
+### drawRectangle
+
+Draws a filled rectangle.
+
+<ParamField path="posX" type="Number" required>
+  X position
+</ParamField>
+
+<ParamField path="posY" type="Number" required>
+  Y position
+</ParamField>
+
+<ParamField path="width" type="Number" required>
+  Rectangle width
+</ParamField>
+
+<ParamField path="height" type="Number" required>
+  Rectangle height
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Rectangle color
+</ParamField>
+
+```wren
+import "raylib" for Raylib, Color
+
+var screenWidth = 800
+var screenHeight = 450
+
+Raylib.initWindow(screenWidth, screenHeight, "Rectangles")
+
+while (!Raylib.windowShouldClose()) {
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  // Draw filled rectangle
+  Raylib.drawRectangle(100, 100, 200, 150, Color.Red)
+  
+  // Draw rectangle outline
+  Raylib.drawRectangleLines(350, 100, 200, 150, Color.Blue)
+  
+  Raylib.endDrawing()
+}
+```
+
+### drawRectangleV
+
+Draws rectangle using Vector2 for position and size.
+
+<ParamField path="position" type="Vector2" required>
+  Position
+</ParamField>
+
+<ParamField path="size" type="Vector2" required>
+  Size
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Rectangle color
+</ParamField>
+
+```wren
+var pos = Vector2.new(100, 100)
+var size = Vector2.new(200, 150)
+Raylib.drawRectangleV(pos, size, Color.Purple)
+```
+
+### drawRectangleRec
+
+Draws rectangle using Rectangle struct.
+
+<ParamField path="rec" type="Rectangle" required>
+  Rectangle to draw
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Rectangle color
+</ParamField>
+
+```wren
+import "raylib" for Raylib, Rectangle, Color
+
+var player = Rectangle.new(400, 280, 40, 40)
+Raylib.drawRectangleRec(player, Color.Red)
+```
+
+### drawRectanglePro
+
+Draws rectangle with origin and rotation.
+
+<ParamField path="rec" type="Rectangle" required>
+  Rectangle
+</ParamField>
+
+<ParamField path="origin" type="Vector2" required>
+  Rotation origin
+</ParamField>
+
+<ParamField path="rotation" type="Number" required>
+  Rotation in degrees
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Rectangle color
+</ParamField>
+
+```wren
+var rec = Rectangle.new(400, 225, 100, 60)
+var origin = Vector2.new(50, 30)  // Center of rectangle
+var rotation = 45.0
+Raylib.drawRectanglePro(rec, origin, rotation, Color.Green)
+```
+
+### drawRectangleGradientV
+
+Draws vertical gradient-filled rectangle.
+
+<ParamField path="posX" type="Number" required>
+  X position
+</ParamField>
+
+<ParamField path="posY" type="Number" required>
+  Y position
+</ParamField>
+
+<ParamField path="width" type="Number" required>
+  Width
+</ParamField>
+
+<ParamField path="height" type="Number" required>
+  Height
+</ParamField>
+
+<ParamField path="color1" type="Color" required>
+  Top color
+</ParamField>
+
+<ParamField path="color2" type="Color" required>
+  Bottom color
+</ParamField>
+
+```wren
+Raylib.drawRectangleGradientV(100, 100, 200, 150, Color.Maroon, Color.Gold)
+```
+
+### drawRectangleGradientH
+
+Draws horizontal gradient-filled rectangle.
+
+<ParamField path="posX" type="Number" required>
+  X position
+</ParamField>
+
+<ParamField path="posY" type="Number" required>
+  Y position
+</ParamField>
+
+<ParamField path="width" type="Number" required>
+  Width
+</ParamField>
+
+<ParamField path="height" type="Number" required>
+  Height
+</ParamField>
+
+<ParamField path="color1" type="Color" required>
+  Left color
+</ParamField>
+
+<ParamField path="color2" type="Color" required>
+  Right color
+</ParamField>
+
+```wren
+Raylib.drawRectangleGradientH(100, 100, 200, 150, Color.Blue, Color.Yellow)
+```
+
+### drawRectangleLines
+
+Draws rectangle outline.
+
+<ParamField path="posX" type="Number" required>
+  X position
+</ParamField>
+
+<ParamField path="posY" type="Number" required>
+  Y position
+</ParamField>
+
+<ParamField path="width" type="Number" required>
+  Width
+</ParamField>
+
+<ParamField path="height" type="Number" required>
+  Height
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Outline color
+</ParamField>
+
+```wren
+Raylib.drawRectangleLines(100, 100, 200, 150, Color.Orange)
+```
+
+### drawRectangleRounded
+
+Draws rectangle with rounded corners.
+
+<ParamField path="rec" type="Rectangle" required>
+  Rectangle
+</ParamField>
+
+<ParamField path="roundness" type="Number" required>
+  Corner roundness (0.0 to 1.0)
+</ParamField>
+
+<ParamField path="segments" type="Number" required>
+  Number of segments per corner
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Rectangle color
+</ParamField>
+
+```wren
+var rec = Rectangle.new(100, 100, 200, 150)
+Raylib.drawRectangleRounded(rec, 0.3, 8, Color.SkyBlue)
+```
+
+## Triangle Drawing
+
+### drawTriangle
+
+Draws a filled triangle.
+
+<ParamField path="v1" type="Vector2" required>
+  First vertex
+</ParamField>
+
+<ParamField path="v2" type="Vector2" required>
+  Second vertex
+</ParamField>
+
+<ParamField path="v3" type="Vector2" required>
+  Third vertex
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Triangle color
+</ParamField>
+
+```wren
+var v1 = Vector2.new(400, 100)
+var v2 = Vector2.new(300, 250)
+var v3 = Vector2.new(500, 250)
+Raylib.drawTriangle(v1, v2, v3, Color.Violet)
+```
+
+### drawTriangleLines
+
+Draws triangle outline.
+
+<ParamField path="v1" type="Vector2" required>
+  First vertex
+</ParamField>
+
+<ParamField path="v2" type="Vector2" required>
+  Second vertex
+</ParamField>
+
+<ParamField path="v3" type="Vector2" required>
+  Third vertex
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Outline color
+</ParamField>
+
+```wren
+Raylib.drawTriangleLines(v1, v2, v3, Color.DarkBlue)
+```
+
+## Polygon Drawing
+
+### drawPoly
+
+Draws a regular polygon.
+
+<ParamField path="center" type="Vector2" required>
+  Polygon center
+</ParamField>
+
+<ParamField path="sides" type="Number" required>
+  Number of sides
+</ParamField>
+
+<ParamField path="radius" type="Number" required>
+  Polygon radius
+</ParamField>
+
+<ParamField path="rotation" type="Number" required>
+  Rotation in degrees
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Polygon color
+</ParamField>
+
+```wren
+var rotation = 0.0
+
+while (!Raylib.windowShouldClose()) {
+  rotation = rotation + 0.2
+  
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  // Draw hexagon
+  Raylib.drawPoly(Vector2.new(400, 225), 6, 80, rotation, Color.Brown)
+  
+  Raylib.endDrawing()
+}
+```
+
+### drawPolyLines
+
+Draws polygon outline.
+
+<ParamField path="center" type="Vector2" required>
+  Polygon center
+</ParamField>
+
+<ParamField path="sides" type="Number" required>
+  Number of sides
+</ParamField>
+
+<ParamField path="radius" type="Number" required>
+  Polygon radius
+</ParamField>
+
+<ParamField path="rotation" type="Number" required>
+  Rotation in degrees
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Outline color
+</ParamField>
+
+```wren
+Raylib.drawPolyLines(Vector2.new(400, 225), 6, 90, rotation, Color.Brown)
+```
+
+## Collision Detection
+
+### checkCollisionRecs
+
+Checks collision between two rectangles.
+
+<ParamField path="rec1" type="Rectangle" required>
+  First rectangle
+</ParamField>
+
+<ParamField path="rec2" type="Rectangle" required>
+  Second rectangle
+</ParamField>
+
+**Returns:** `Boolean` - True if collision detected
+
+```wren
+var player = Rectangle.new(100, 100, 40, 40)
+var wall = Rectangle.new(200, 100, 50, 100)
+
+if (Raylib.checkCollisionRecs(player, wall)) {
+  System.print("Collision!")
+}
+```
+
+### checkCollisionCircles
+
+Checks collision between two circles.
+
+<ParamField path="center1" type="Vector2" required>
+  First circle center
+</ParamField>
+
+<ParamField path="radius1" type="Number" required>
+  First circle radius
+</ParamField>
+
+<ParamField path="center2" type="Vector2" required>
+  Second circle center
+</ParamField>
+
+<ParamField path="radius2" type="Number" required>
+  Second circle radius
+</ParamField>
+
+**Returns:** `Boolean` - True if collision detected
+
+```wren
+var player = Vector2.new(100, 100)
+var enemy = Vector2.new(150, 150)
+
+if (Raylib.checkCollisionCircles(player, 20, enemy, 20)) {
+  System.print("Hit!")
+}
+```
+
+### checkCollisionCircleRec
+
+Checks collision between circle and rectangle.
+
+<ParamField path="center" type="Vector2" required>
+  Circle center
+</ParamField>
+
+<ParamField path="radius" type="Number" required>
+  Circle radius
+</ParamField>
+
+<ParamField path="rec" type="Rectangle" required>
+  Rectangle
+</ParamField>
+
+**Returns:** `Boolean` - True if collision detected
+
+### checkCollisionPointRec
+
+Checks if point is inside rectangle.
+
+<ParamField path="point" type="Vector2" required>
+  Point to check
+</ParamField>
+
+<ParamField path="rec" type="Rectangle" required>
+  Rectangle
+</ParamField>
+
+**Returns:** `Boolean` - True if point is inside
+
+```wren
+var mousePos = Raylib.getMousePosition()
+var button = Rectangle.new(100, 100, 200, 50)
+
+if (Raylib.checkCollisionPointRec(mousePos, button)) {
+  // Mouse is over button
+}
+```
+
+### checkCollisionPointCircle
+
+Checks if point is inside circle.
+
+<ParamField path="point" type="Vector2" required>
+  Point to check
+</ParamField>
+
+<ParamField path="center" type="Vector2" required>
+  Circle center
+</ParamField>
+
+<ParamField path="radius" type="Number" required>
+  Circle radius
+</ParamField>
+
+**Returns:** `Boolean` - True if point is inside
+
+## Best Practices
+
+<Tip>
+  Use `drawRectangleRec()` with Rectangle structs for cleaner code when working with many rectangles.
+</Tip>
+
+<Note>
+  Collision detection functions are very efficient for basic 2D games. Use them for simple AABB collision before implementing more complex systems.
+</Note>

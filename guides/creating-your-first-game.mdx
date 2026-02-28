@@ -1,0 +1,232 @@
+---
+title: Creating Your First Game
+description: Step-by-step tutorial to build your first game with Talon
+---
+
+This guide walks you through creating a complete game with Talon, from initial setup to implementing game states and rendering.
+
+## Prerequisites
+
+Before starting, make sure you have Talon installed and can run the basic example:
+
+```bash
+talon run examples/basic.wren
+```
+
+## Project Structure
+
+Create a new file called `my_game.wren` in your project directory. This will contain our complete game.
+
+## Step 1: Import Required Modules
+
+<Steps>
+  <Step title="Import Raylib and Math modules">
+    Start by importing the essential modules for game development:
+
+    ```wren
+    import "raylib" for Color, Raylib, Rectangle, Vector2, KeyCode
+    import "math" for Math
+    ```
+
+    These imports give you access to:
+    - **Color**: Predefined colors and color creation
+    - **Raylib**: Core rendering and window functions
+    - **Rectangle** and **Vector2**: Geometric primitives
+    - **KeyCode**: Input constants
+    - **Math**: Mathematical operations
+  </Step>
+
+  <Step title="Define game constants">
+    Set up your game window dimensions and other constants:
+
+    ```wren
+    var screenWidth = 800
+    var screenHeight = 450
+    var title = "My First Talon Game"
+    ```
+  </Step>
+</Steps>
+
+## Step 2: Create Game States
+
+Game states help organize your game logic into distinct phases (menu, gameplay, game over, etc.).
+
+```wren
+class GameScreen {
+  static Logo { 0 }
+  static Title { 1 }
+  static GamePlay { 2 }
+  static Ending { 3 }
+}
+
+var currentScreen = GameScreen.Logo
+var framesCounter = 0
+```
+
+<Note>
+  Using static methods in a class is an elegant way to define enumerations in Wren.
+</Note>
+
+## Step 3: Initialize the Window
+
+Create your game window and set the target frame rate:
+
+```wren
+Raylib.initWindow(screenWidth, screenHeight, title)
+Raylib.setTargetFPS(60)
+```
+
+## Step 4: Implement the Game Loop
+
+The game loop is the heart of your game. It runs continuously until the window closes:
+
+```wren
+while (!Raylib.windowShouldClose()) {
+  // Update logic
+  if (currentScreen == GameScreen.Logo) {
+    framesCounter = framesCounter + 1
+    if (framesCounter > 120) {
+      currentScreen = GameScreen.Title
+    }
+  }
+
+  if (currentScreen == GameScreen.Title) {
+    if (Raylib.isKeyPressed(KeyCode.KEY_ENTER)) {
+      currentScreen = GameScreen.GamePlay
+    }
+  }
+
+  if (currentScreen == GameScreen.GamePlay) {
+    if (Raylib.isKeyPressed(KeyCode.KEY_ENTER)) {
+      currentScreen = GameScreen.Ending
+    }
+  }
+
+  // Rendering
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+
+  if (currentScreen == GameScreen.Logo) {
+    Raylib.drawText("LOGO SCREEN", 20, 20, 40, Color.Gray)
+    Raylib.drawText("Wait for 2 seconds...", 290, 220, 20, Color.Gray)
+  }
+
+  if (currentScreen == GameScreen.Title) {
+    Raylib.drawRectangle(0, 0, screenWidth, screenHeight, Color.Green)
+    Raylib.drawText("TITLE SCREEN", 20, 20, 40, Color.Blue)
+    Raylib.drawText("PRESS ENTER to START", 120, 220, 20, Color.DarkGreen)
+  }
+
+  if (currentScreen == GameScreen.GamePlay) {
+    Raylib.drawText("GAMEPLAY SCREEN", 20, 20, 40, Color.Purple)
+    Raylib.drawText("PRESS ENTER to END", 130, 220, 20, Color.Maroon)
+  }
+
+  if (currentScreen == GameScreen.Ending) {
+    Raylib.drawText("ENDING SCREEN", 20, 20, 40, Color.DarkBlue)
+    Raylib.drawText("PRESS ENTER to return to TITLE", 130, 220, 20, Color.Maroon)
+  }
+
+  Raylib.endDrawing()
+}
+```
+
+<Tip>
+  The game loop follows a consistent pattern:
+  1. Handle input and update game state
+  2. Begin drawing with `beginDrawing()`
+  3. Clear the background
+  4. Draw all visual elements
+  5. End drawing with `endDrawing()`
+</Tip>
+
+## Step 5: Clean Up Resources
+
+Always close the window when your game exits:
+
+```wren
+Raylib.closeWindow()
+```
+
+## Complete Example
+
+<CodeGroup>
+```wren Basic Game
+import "raylib" for Color, Raylib, KeyCode
+
+var screenWidth = 800
+var screenHeight = 450
+
+class GameScreen {
+  static Logo { 0 }
+  static Title { 1 }
+  static GamePlay { 2 }
+  static Ending { 3 }
+}
+
+var currentScreen = GameScreen.Logo
+var framesCounter = 0
+
+Raylib.initWindow(screenWidth, screenHeight, "My First Talon Game")
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+  // Update
+  if (currentScreen == GameScreen.Logo) {
+    framesCounter = framesCounter + 1
+    if (framesCounter > 120) {
+      currentScreen = GameScreen.Title
+    }
+  }
+
+  if (currentScreen == GameScreen.Title) {
+    if (Raylib.isKeyPressed(KeyCode.KEY_ENTER)) {
+      currentScreen = GameScreen.GamePlay
+    }
+  }
+
+  // Draw
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+
+  if (currentScreen == GameScreen.Logo) {
+    Raylib.drawText("LOGO SCREEN", 20, 20, 40, Color.Gray)
+  }
+
+  if (currentScreen == GameScreen.Title) {
+    Raylib.drawText("TITLE SCREEN", 20, 20, 40, Color.Blue)
+    Raylib.drawText("PRESS ENTER to START", 120, 220, 20, Color.DarkGreen)
+  }
+
+  if (currentScreen == GameScreen.GamePlay) {
+    Raylib.drawText("GAMEPLAY SCREEN", 20, 20, 40, Color.Purple)
+  }
+
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+</CodeGroup>
+
+## Running Your Game
+
+Run your game using the Talon CLI:
+
+```bash
+talon run my_game.wren
+```
+
+## Next Steps
+
+Now that you've created your first game, you can:
+
+- [Add sprites and textures](/guides/working-with-sprites)
+- [Implement player input](/guides/handling-input)
+- [Add a 2D camera](/guides/2d-camera)
+- [Detect collisions](/guides/collision-detection)
+- [Organize code with modules](/guides/using-modules)
+
+<Note>
+  The example code is based on the `basic.wren` example from the Talon repository.
+</Note>

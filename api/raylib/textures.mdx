@@ -1,0 +1,449 @@
+---
+title: "Texture Functions"
+description: "Texture loading, manipulation, and rendering functions"
+---
+
+## Overview
+
+Texture functions handle loading, unloading, and drawing textures and images. Textures are GPU-resident images optimized for rendering.
+
+## Texture Loading
+
+### loadTexture
+
+Loads texture from file into GPU memory (VRAM).
+
+<ParamField path="fileName" type="String" required>
+  Path to image file (supports .png, .jpg, .bmp, .tga, .gif, etc.)
+</ParamField>
+
+**Returns:** `Texture2D` - Loaded texture
+
+```wren
+import "raylib" for Raylib, Texture2D, Color
+
+Raylib.initWindow(800, 450, "Texture Example")
+
+var texture = Texture2D.loadTexture("resources/player.png")
+
+while (!Raylib.windowShouldClose()) {
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  Raylib.drawTexture(texture, 100, 100, Color.White)
+  
+  Raylib.endDrawing()
+}
+
+texture.unloadTexture()
+Raylib.closeWindow()
+```
+
+### loadTextureFromImage
+
+Loads texture from image data.
+
+<ParamField path="image" type="Image" required>
+  Image to convert to texture
+</ParamField>
+
+**Returns:** `Texture2D` - Loaded texture
+
+```wren
+var image = Raylib.loadImage("player.png")
+// Modify image here if needed
+var texture = Raylib.loadTextureFromImage(image)
+Raylib.unloadImage(image)
+```
+
+### isTextureValid
+
+Checks if a texture is valid.
+
+<ParamField path="texture" type="Texture2D" required>
+  Texture to check
+</ParamField>
+
+**Returns:** `Boolean` - True if texture is valid
+
+```wren
+if (Raylib.isTextureValid(texture)) {
+  Raylib.drawTexture(texture, 0, 0, Color.White)
+}
+```
+
+### unloadTexture
+
+Unloads texture from GPU memory.
+
+<ParamField path="texture" type="Texture2D" required>
+  Texture to unload
+</ParamField>
+
+```wren
+texture.unloadTexture()
+// or
+Raylib.unloadTexture(texture)
+```
+
+## Render Textures
+
+### loadRenderTexture
+
+Loads a render texture for off-screen rendering.
+
+<ParamField path="width" type="Number" required>
+  Render texture width
+</ParamField>
+
+<ParamField path="height" type="Number" required>
+  Render texture height
+</ParamField>
+
+**Returns:** `RenderTexture2D` - Render texture
+
+```wren
+var renderTexture = Raylib.loadRenderTexture(800, 450)
+
+// Draw to render texture
+Raylib.beginTextureMode(renderTexture)
+Raylib.clearBackground(Color.RayWhite)
+Raylib.drawCircle(400, 225, 100, Color.Red)
+Raylib.endTextureMode()
+
+// Use render texture
+Raylib.beginDrawing()
+Raylib.clearBackground(Color.Black)
+Raylib.drawTexture(renderTexture.texture, 0, 0, Color.White)
+Raylib.endDrawing()
+
+Raylib.unloadRenderTexture(renderTexture)
+```
+
+### isRenderTextureValid
+
+Checks if a render texture is valid.
+
+<ParamField path="target" type="RenderTexture2D" required>
+  Render texture to check
+</ParamField>
+
+**Returns:** `Boolean` - True if valid
+
+### unloadRenderTexture
+
+Unloads render texture from GPU memory.
+
+<ParamField path="target" type="RenderTexture2D" required>
+  Render texture to unload
+</ParamField>
+
+```wren
+Raylib.unloadRenderTexture(renderTexture)
+```
+
+## Texture Drawing
+
+### drawTexture
+
+Draws a texture at specified position.
+
+<ParamField path="texture" type="Texture2D" required>
+  Texture to draw
+</ParamField>
+
+<ParamField path="posX" type="Number" required>
+  X position
+</ParamField>
+
+<ParamField path="posY" type="Number" required>
+  Y position
+</ParamField>
+
+<ParamField path="tint" type="Color" required>
+  Tint color (use Color.White for no tint)
+</ParamField>
+
+```wren
+Raylib.drawTexture(texture, 100, 100, Color.White)
+
+// Draw with red tint
+Raylib.drawTexture(texture, 200, 100, Color.Red)
+```
+
+### drawTextureV
+
+Draws a texture with position defined by a Vector2.
+
+<ParamField path="texture" type="Texture2D" required>
+  Texture to draw
+</ParamField>
+
+<ParamField path="position" type="Vector2" required>
+  Position vector
+</ParamField>
+
+<ParamField path="tint" type="Color" required>
+  Tint color
+</ParamField>
+
+```wren
+var position = Vector2.new(100, 100)
+Raylib.drawTextureV(texture, position, Color.White)
+```
+
+### drawTextureEx
+
+Draws a texture with extended parameters.
+
+<ParamField path="texture" type="Texture2D" required>
+  Texture to draw
+</ParamField>
+
+<ParamField path="position" type="Vector2" required>
+  Position vector
+</ParamField>
+
+<ParamField path="rotation" type="Number" required>
+  Rotation in degrees
+</ParamField>
+
+<ParamField path="scale" type="Number" required>
+  Scale factor
+</ParamField>
+
+<ParamField path="tint" type="Color" required>
+  Tint color
+</ParamField>
+
+```wren
+var rotation = 45.0  // degrees
+var scale = 2.0      // 2x size
+Raylib.drawTextureEx(texture, Vector2.new(400, 300), rotation, scale, Color.White)
+```
+
+### drawTextureRec
+
+Draws a part of a texture (source rectangle).
+
+<ParamField path="texture" type="Texture2D" required>
+  Texture to draw
+</ParamField>
+
+<ParamField path="source" type="Rectangle" required>
+  Source rectangle within texture
+</ParamField>
+
+<ParamField path="position" type="Vector2" required>
+  Position to draw at
+</ParamField>
+
+<ParamField path="tint" type="Color" required>
+  Tint color
+</ParamField>
+
+```wren
+// Draw sprite from sprite sheet
+var spriteSize = 32
+var frameX = 0
+var frameY = 0
+var sourceRec = Rectangle.new(frameX * spriteSize, frameY * spriteSize, spriteSize, spriteSize)
+var position = Vector2.new(100, 100)
+
+Raylib.drawTextureRec(spriteSheet, sourceRec, position, Color.White)
+```
+
+### drawTexturePro
+
+Draws a texture with pro parameters (source, dest, origin, rotation).
+
+<ParamField path="texture" type="Texture2D" required>
+  Texture to draw
+</ParamField>
+
+<ParamField path="source" type="Rectangle" required>
+  Source rectangle
+</ParamField>
+
+<ParamField path="dest" type="Rectangle" required>
+  Destination rectangle
+</ParamField>
+
+<ParamField path="origin" type="Vector2" required>
+  Rotation origin point
+</ParamField>
+
+<ParamField path="rotation" type="Number" required>
+  Rotation in degrees
+</ParamField>
+
+<ParamField path="tint" type="Color" required>
+  Tint color
+</ParamField>
+
+```wren
+var source = Rectangle.new(0, 0, texture.width, texture.height)
+var dest = Rectangle.new(400, 300, texture.width * 2, texture.height * 2)
+var origin = Vector2.new(texture.width, texture.height)  // Rotate around center
+var rotation = 45.0
+
+Raylib.drawTexturePro(texture, source, dest, origin, rotation, Color.White)
+```
+
+## Texture Configuration
+
+### updateTexture
+
+Updates GPU texture with new data.
+
+<ParamField path="texture" type="Texture2D" required>
+  Texture to update
+</ParamField>
+
+<ParamField path="pixels" type="Data" required>
+  Pixel data
+</ParamField>
+
+### genTextureMipmaps
+
+Generates GPU mipmaps for a texture.
+
+<ParamField path="texture" type="Texture2D" required>
+  Texture to generate mipmaps for
+</ParamField>
+
+```wren
+Raylib.genTextureMipmaps(texture)
+```
+
+### setTextureFilter
+
+Sets texture scaling filter mode.
+
+<ParamField path="texture" type="Texture2D" required>
+  Texture to configure
+</ParamField>
+
+<ParamField path="filter" type="Number" required>
+  Filter mode (0=POINT, 1=BILINEAR, 2=TRILINEAR, 3=ANISOTROPIC_4X, 4=ANISOTROPIC_8X, 5=ANISOTROPIC_16X)
+</ParamField>
+
+```wren
+// Use point filtering for pixel-perfect rendering
+Raylib.setTextureFilter(texture, 0)  // TEXTURE_FILTER_POINT
+
+// Use bilinear filtering for smooth scaling
+Raylib.setTextureFilter(texture, 1)  // TEXTURE_FILTER_BILINEAR
+```
+
+### setTextureWrap
+
+Sets texture wrapping mode.
+
+<ParamField path="texture" type="Texture2D" required>
+  Texture to configure
+</ParamField>
+
+<ParamField path="wrap" type="Number" required>
+  Wrap mode (0=REPEAT, 1=CLAMP, 2=MIRROR_REPEAT, 3=MIRROR_CLAMP)
+</ParamField>
+
+```wren
+Raylib.setTextureWrap(texture, 0)  // TEXTURE_WRAP_REPEAT
+```
+
+## Image Loading (CPU)
+
+### loadImage
+
+Loads image from file into CPU memory (can be manipulated).
+
+<ParamField path="fileName" type="String" required>
+  Path to image file
+</ParamField>
+
+**Returns:** `Image` - Loaded image
+
+```wren
+var image = Raylib.loadImage("player.png")
+// Modify image on CPU
+Raylib.imageColorTint(image, Color.Red)
+// Convert to texture for rendering
+var texture = Raylib.loadTextureFromImage(image)
+Raylib.unloadImage(image)
+```
+
+### isImageValid
+
+Checks if an image is valid.
+
+<ParamField path="image" type="Image" required>
+  Image to check
+</ParamField>
+
+**Returns:** `Boolean` - True if valid
+
+### unloadImage
+
+Unloads image from CPU memory.
+
+<ParamField path="image" type="Image" required>
+  Image to unload
+</ParamField>
+
+```wren
+Raylib.unloadImage(image)
+```
+
+## Texture Properties
+
+### Texture2D.width
+
+Gets the width of a texture.
+
+**Returns:** `Number` - Texture width in pixels
+
+```wren
+var width = texture.width
+```
+
+### Texture2D.height
+
+Gets the height of a texture.
+
+**Returns:** `Number` - Texture height in pixels
+
+```wren
+var height = texture.height
+var centerX = width / 2
+var centerY = height / 2
+```
+
+## Best Practices
+
+<Tip>
+  Load textures once during initialization and reuse them. Texture loading is expensive!
+</Tip>
+
+<Note>
+  Always unload textures when done to free GPU memory:
+  ```wren
+  texture.unloadTexture()
+  ```
+</Note>
+
+<Warning>
+  Images are CPU-resident, textures are GPU-resident. Convert images to textures for rendering:
+  ```wren
+  var image = Raylib.loadImage("sprite.png")
+  var texture = Raylib.loadTextureFromImage(image)
+  Raylib.unloadImage(image)  // Free CPU memory
+  ```
+</Warning>
+
+<Tip>
+  For pixel art games, use point filtering to maintain sharp edges:
+  ```wren
+  Raylib.setTextureFilter(texture, 0)  // TEXTURE_FILTER_POINT
+  ```
+</Tip>

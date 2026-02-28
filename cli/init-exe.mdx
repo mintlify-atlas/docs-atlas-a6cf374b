@@ -1,0 +1,309 @@
+---
+title: 'talon init-exe'
+description: 'Generate Docker configuration for building native executables'
+---
+
+## Overview
+
+The `init-exe` command generates Docker-based build configuration files that enable you to compile your Talon game into native executables for Linux and Windows. This allows you to distribute your game as standalone binaries that users can run without installing Talon.
+
+## Syntax
+
+```bash
+talon init-exe <file.wren>
+```
+
+<ParamField path="file.wren" type="string" required>
+  Path to your main Wren script file. This will be used as the entry point for the compiled executable.
+</ParamField>
+
+## What It Creates
+
+Running `init-exe` generates two files in your current directory:
+
+### 1. Dockerfile
+
+A multi-stage Docker configuration that:
+- Sets up cross-compilation environments for Linux and Windows
+- Compiles your Talon game into native binaries
+- Packages all dependencies
+- Outputs executables to the `dist/` directory
+
+### 2. docker-compose.yml
+
+A Docker Compose file that:
+- Defines the build service
+- Configures volume mounts
+- Sets up output directories
+- Uses your project directory name as the service name
+
+## Generated Files
+
+Both files are customized with:
+
+- **Project Name**: Extracted from your current directory name
+- **Main File**: The `.wren` file you specified as the entry point
+
+## Build Process
+
+### Step 1: Initialize
+
+Generate the Docker configuration:
+
+```bash
+talon init-exe index.wren
+```
+
+This creates:
+- `Dockerfile`
+- `docker-compose.yml`
+
+### Step 2: Build
+
+Compile the executables using Docker Compose:
+
+```bash
+docker compose up --build -d
+```
+
+This will:
+1. Build the Docker image
+2. Compile your game for Linux (x86_64)
+3. Compile your game for Windows (x86_64)
+4. Output binaries to `dist/` folder
+
+### Step 3: Distribute
+
+Find your executables in the `dist/` directory:
+
+```
+dist/
+  ├── linux/
+  │   └── game-name
+  └── windows/
+      └── game-name.exe
+```
+
+## Complete Example
+
+### Project Structure
+
+```
+my-game/
+  ├── main.wren
+  ├── game.wren
+  └── utils.wren
+```
+
+### Initialize Build Configuration
+
+```bash
+cd my-game
+talon init-exe main.wren
+```
+
+**Output:**
+```
+my-game/
+  ├── main.wren
+  ├── game.wren
+  ├── utils.wren
+  ├── Dockerfile          ← Generated
+  └── docker-compose.yml  ← Generated
+```
+
+### Build Executables
+
+```bash
+docker compose up --build -d
+```
+
+**Output:**
+```bash
+[+] Building 145.2s
+[+] Running 1/1
+ ✔ Container my-game-build-1 Started
+```
+
+### Check Results
+
+```
+my-game/
+  ├── main.wren
+  ├── game.wren
+  ├── utils.wren
+  ├── Dockerfile
+  ├── docker-compose.yml
+  └── dist/                ← Build output
+      ├── linux/
+      │   └── my-game
+      └── windows/
+          └── my-game.exe
+```
+
+## Distribution
+
+### Linux Executable
+
+Distribute `dist/linux/my-game`:
+
+```bash
+./my-game  # Users run this directly
+```
+
+### Windows Executable
+
+Distribute `dist/windows/my-game.exe`:
+
+```cmd
+my-game.exe  # Users run this directly
+```
+
+## Requirements
+
+### Docker
+
+You must have Docker installed and running:
+
+```bash
+docker --version  # Should show Docker version
+```
+
+If Docker is not installed:
+- **Linux**: Install via package manager or [docker.com](https://docs.docker.com/engine/install/)
+- **macOS**: Install [Docker Desktop](https://www.docker.com/products/docker-desktop)
+- **Windows**: Install [Docker Desktop](https://www.docker.com/products/docker-desktop)
+
+### Docker Compose
+
+Modern Docker installations include Docker Compose v2:
+
+```bash
+docker compose version
+```
+
+## File Templates
+
+The generated files use templates with placeholders:
+
+- `{{{ PROJECT_NAME }}}` - Replaced with your directory name
+- `{{{ MAIN_FILE }}}` - Replaced with your specified `.wren` file
+
+## Advanced Usage
+
+### Custom Build Configuration
+
+After generating the files, you can customize:
+
+**Dockerfile:**
+- Add additional dependencies
+- Modify compiler flags
+- Include assets or resources
+- Change output paths
+
+**docker-compose.yml:**
+- Add environment variables
+- Configure build arguments
+- Modify volume mounts
+
+### Including Assets
+
+To include game assets (images, sounds, etc.) in your build:
+
+1. Modify the `Dockerfile` to copy asset directories
+2. Ensure assets are in the correct relative paths
+3. Rebuild with `docker compose up --build`
+
+## Troubleshooting
+
+### Docker Not Found
+
+```bash
+bash: docker: command not found
+```
+
+**Solution**: Install Docker Desktop or Docker Engine.
+
+### Permission Denied
+
+```bash
+permission denied while trying to connect to the Docker daemon socket
+```
+
+**Solution**: Add your user to the `docker` group:
+
+```bash
+sudo usermod -aG docker $USER
+newgrp docker
+```
+
+### Build Fails
+
+Check Docker logs:
+
+```bash
+docker compose logs
+```
+
+Common issues:
+- Syntax errors in Wren code
+- Missing module imports
+- Invalid file paths
+
+### Executables Not Created
+
+Verify the build completed:
+
+```bash
+docker compose ps  # Check container status
+ls -la dist/       # Check output directory
+```
+
+## Build Time
+
+First build may take several minutes:
+- Docker image download: ~1-2 minutes
+- Compilation: ~2-5 minutes
+- Total: ~3-7 minutes
+
+Subsequent builds are faster due to Docker layer caching.
+
+## Platform Support
+
+| Target Platform | Architecture | Output |
+|----------------|--------------|--------|
+| Linux | x86_64 | ELF binary |
+| Windows | x86_64 | PE executable (.exe) |
+
+## Comparison with WASM
+
+| Feature | init-exe | init-wasm |
+|---------|----------|----------|
+| Output | Native binaries | HTML + WASM |
+| Performance | Native speed | Near-native speed |
+| Distribution | Download & run | Web browser |
+| File size | Larger | Smaller |
+| Platform support | Linux, Windows | Any modern browser |
+
+## Related Commands
+
+- [`talon run`](/cli/run) - Run your game during development
+- [`talon --hot`](/cli/hot-reload) - Develop with automatic reloading
+- [`talon init-wasm`](/cli/init-wasm) - Build for web deployment
+
+## Best Practices
+
+1. **Test Before Building**: Ensure your game runs correctly with `talon main.wren`
+2. **Version Control**: Add `Dockerfile` and `docker-compose.yml` to Git
+3. **Ignore Build Output**: Add `dist/` to `.gitignore`
+4. **Clean Builds**: Remove `dist/` between builds for clean output
+5. **Asset Management**: Plan asset inclusion in your Dockerfile
+
+## Next Steps
+
+After building executables:
+
+1. **Test**: Run the executables on target platforms
+2. **Package**: Create installation packages or ZIP archives
+3. **Distribute**: Upload to itch.io, Steam, or your website
+4. **Document**: Provide README with system requirements

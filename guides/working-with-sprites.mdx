@@ -1,0 +1,290 @@
+---
+title: Working with Sprites
+description: Learn how to load and draw textures in your Talon games
+---
+
+Sprites are 2D images that represent game objects like characters, items, and environment elements. Talon provides Raylib's powerful texture system for working with sprites.
+
+## Loading Textures
+
+Textures must be loaded before they can be drawn. Talon provides two main ways to work with textures:
+
+### Static Method (Simple)
+
+Use `Raylib.loadTexture()` for simple texture loading:
+
+```wren
+import "raylib" for Raylib
+
+var texture = Raylib.loadTexture("path/to/image.png")
+```
+
+### Texture2D Class (Advanced)
+
+Use the `Texture2D` class for more control:
+
+```wren
+import "raylib" for Texture2D
+
+var texture = Texture2D.loadTexture("res/sprite.png")
+```
+
+<Note>
+  Both methods work identically. The `Texture2D` class provides a more object-oriented approach and is used in the official examples.
+</Note>
+
+## Drawing Textures
+
+Once loaded, textures can be drawn using various methods depending on your needs.
+
+### Basic Drawing
+
+Draw a texture at a specific position:
+
+```wren
+Raylib.drawTexture(texture, x, y, Color.White)
+```
+
+### Drawing with Vectors
+
+Use `Vector2` for position:
+
+```wren
+import "raylib" for Vector2
+
+var position = Vector2.new(100, 100)
+Raylib.drawTextureV(texture, position, Color.White)
+```
+
+### Advanced Drawing with `drawTexturePro`
+
+For precise control over source and destination rectangles, scaling, rotation, and tinting:
+
+```wren
+import "raylib" for Raylib, Rectangle, Vector2, Color
+
+var texture = Texture2D.loadTexture("res/paddle.png")
+
+// Define source rectangle (which part of texture to draw)
+var sourceRect = Rectangle.new(0.0, 0.0, 64.0, 16.0)
+
+// Define destination rectangle (where and how big to draw)
+var destRect = Rectangle.new(100.0, 100.0, 128.0, 32.0)
+
+// Origin point for rotation
+var origin = Vector2.new(0.0, 0.0)
+
+// Draw the texture
+Raylib.drawTexturePro(
+  texture,
+  sourceRect,
+  destRect,
+  origin,
+  0.0,  // rotation in degrees
+  Color.new(255, 255, 255, 255)  // tint color
+)
+```
+
+<Tip>
+  `drawTexturePro` is powerful for sprite sheets, scaling sprites to different sizes, and rotating sprites.
+</Tip>
+
+## Real-World Example: Breakout Game
+
+Here's how the Breakout example loads and draws multiple textures:
+
+<Steps>
+  <Step title="Load textures during initialization">
+    ```wren
+    class Game {
+      construct new() {
+        _brick_texture = Texture2D.loadTexture("res/brick.png")
+        _ball_texture = Texture2D.loadTexture("res/tennis.png")
+        _paddle_texture = Texture2D.loadTexture("res/paddle.png")
+        // ... other initialization
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Create drawable game objects">
+    ```wren
+    class Paddle {
+      construct new() {
+        _rec = Rectangle.new(
+          SCREEN_WIDTH / 2.0 - PADDLE_W / 2.0,
+          SCREEN_HEIGHT - PADDLE_H - 20.0,
+          PADDLE_W,
+          PADDLE_H
+        )
+      }
+
+      rec { _rec }
+
+      draw(texture) {
+        var sourceRect = Rectangle.new(0.0, 0.0, 64.0, 16.0)
+        Raylib.drawTexturePro(
+          texture,
+          sourceRect,
+          _rec,
+          Vector2.new(0.0, 0.0),
+          0.0,
+          Color.new(255, 255, 255, 255)
+        )
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Draw in the game loop">
+    ```wren
+    class Game {
+      draw() {
+        Raylib.beginDrawing()
+        Raylib.clearBackground(Color.new(0, 0, 0, 255))
+
+        _paddle.draw(_paddle_texture)
+        _ball.draw(_ball_texture)
+
+        for (brick in _bricks) {
+          brick.draw(_brick_texture)
+        }
+
+        Raylib.endDrawing()
+      }
+    }
+    ```
+  </Step>
+</Steps>
+
+## Supported Image Formats
+
+Raylib (and thus Talon) supports common image formats:
+
+- PNG (recommended for sprites with transparency)
+- JPG/JPEG
+- BMP
+- TGA
+- GIF
+
+<Tip>
+  Use PNG format for game sprites as it supports transparency (alpha channel).
+</Tip>
+
+## Texture Properties
+
+Textures loaded with `Texture2D` provide useful properties:
+
+```wren
+var texture = Texture2D.loadTexture("sprite.png")
+
+// Access texture dimensions
+var width = texture.width
+var height = texture.height
+```
+
+## Unloading Textures
+
+Always unload textures when you're done to free memory:
+
+```wren
+// Using Texture2D class
+texture.unloadTexture()
+
+// Or using Raylib static method
+Raylib.unloadTexture(texture)
+```
+
+<Note>
+  Unload textures when changing levels, closing the game, or when textures are no longer needed.
+</Note>
+
+## Complete Sprite Example
+
+<CodeGroup>
+```wren Simple Sprite
+import "raylib" for Raylib, Texture2D, Color
+
+var screenWidth = 800
+var screenHeight = 450
+
+Raylib.initWindow(screenWidth, screenHeight, "Sprite Example")
+
+var playerTexture = Texture2D.loadTexture("player.png")
+var x = 100
+var y = 100
+
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+
+  // Draw the sprite
+  Raylib.drawTexture(playerTexture, x, y, Color.White)
+
+  Raylib.endDrawing()
+}
+
+playerTexture.unloadTexture()
+Raylib.closeWindow()
+```
+
+```wren Animated Sprite
+import "raylib" for Raylib, Texture2D, Rectangle, Vector2, Color
+
+var screenWidth = 800
+var screenHeight = 450
+
+Raylib.initWindow(screenWidth, screenHeight, "Animated Sprite")
+
+var spriteSheet = Texture2D.loadTexture("character_sheet.png")
+var frameWidth = 32
+var frameHeight = 32
+var currentFrame = 0
+var frameCounter = 0
+
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+  // Update animation
+  frameCounter = frameCounter + 1
+  if (frameCounter > 8) {
+    frameCounter = 0
+    currentFrame = (currentFrame + 1) % 4
+  }
+
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+
+  // Draw current frame
+  var sourceRect = Rectangle.new(
+    currentFrame * frameWidth,
+    0,
+    frameWidth,
+    frameHeight
+  )
+  var destRect = Rectangle.new(100, 100, frameWidth * 2, frameHeight * 2)
+
+  Raylib.drawTexturePro(
+    spriteSheet,
+    sourceRect,
+    destRect,
+    Vector2.new(0, 0),
+    0.0,
+    Color.White
+  )
+
+  Raylib.endDrawing()
+}
+
+spriteSheet.unloadTexture()
+Raylib.closeWindow()
+```
+</CodeGroup>
+
+## Next Steps
+
+- [Handle player input](/guides/handling-input) to move your sprites
+- [Detect collisions](/guides/collision-detection) between sprites
+- [Use the camera system](/guides/2d-camera) to follow sprites

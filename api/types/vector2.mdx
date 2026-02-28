@@ -1,0 +1,91 @@
+---
+title: Vector2
+description: 2D vector with x and y components
+---
+
+The `Vector2` class represents a 2-dimensional vector with x and y coordinates. It's commonly used for positions, velocities, and offsets in 2D space.
+
+## Constructor
+
+<ParamField path="Vector2.new" type="function">
+  Creates a new 2D vector
+  
+  <Expandable title="parameters">
+    <ParamField path="x" type="number" required>
+      The x coordinate
+    </ParamField>
+    <ParamField path="y" type="number" required>
+      The y coordinate
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Properties
+
+<ParamField path="x" type="number">
+  The x coordinate of the vector (read/write)
+</ParamField>
+
+<ParamField path="y" type="number">
+  The y coordinate of the vector (read/write)
+</ParamField>
+
+## Examples
+
+### Creating a Vector2
+
+```wren
+import "raylib" for Vector2
+
+// Create a position vector
+var position = Vector2.new(100, 200)
+
+// Create a velocity vector
+var velocity = Vector2.new(5.0, -3.0)
+```
+
+### Modifying Vector2 Properties
+
+```wren
+import "raylib" for Vector2
+
+var pos = Vector2.new(50, 50)
+
+// Update position
+pos.x = pos.x + 10
+pos.y = pos.y + 5
+```
+
+### Real Usage from Camera Example
+
+```wren
+import "raylib" for Camera2D, Vector2
+
+var screenWidth = 800
+var screenHeight = 450
+
+// Create camera with Vector2 for offset and target
+var camera = Camera2D.new(
+  Vector2.new(screenWidth / 2.0, screenHeight / 2.0), // offset
+  Vector2.new(400, 300),                               // target
+  0.0,                                                  // rotation
+  1.0                                                   // zoom
+)
+
+// Update camera target based on player position
+camera.target = Vector2.new(player.x + 20, player.y + 20)
+```
+
+### Ball Velocity Example
+
+```wren
+import "raylib" for Vector2
+
+var BALL_SPEED = 300.0
+
+// Create ball velocity
+var velocity = Vector2.new(BALL_SPEED, -BALL_SPEED)
+
+// Reverse velocity on collision
+velocity.y = velocity.y * -1.0
+```

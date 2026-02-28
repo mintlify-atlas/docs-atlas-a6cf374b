@@ -1,0 +1,303 @@
+---
+title: "Drawing Functions"
+description: "Core drawing functions for rendering frames and managing draw modes"
+---
+
+## Overview
+
+Drawing functions control the rendering pipeline, including frame buffer management, camera modes, and various rendering states.
+
+## Frame Management
+
+### beginDrawing
+
+Setup canvas (framebuffer) to start drawing.
+
+```wren
+import "raylib" for Raylib, Color
+
+Raylib.initWindow(800, 450, "Drawing Example")
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+  Raylib.beginDrawing()
+  
+  Raylib.clearBackground(Color.RayWhite)
+  Raylib.drawText("Hello World!", 190, 200, 20, Color.Black)
+  
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+### endDrawing
+
+End canvas drawing and swap buffers (double buffering).
+
+<Warning>
+  Always pair `beginDrawing()` with `endDrawing()`. Drawing commands only work between these calls.
+</Warning>
+
+### clearBackground
+
+Sets background color for the current frame.
+
+<ParamField path="color" type="Color" required>
+  Background color
+</ParamField>
+
+```wren
+Raylib.beginDrawing()
+Raylib.clearBackground(Color.RayWhite)
+// Draw your game here
+Raylib.endDrawing()
+```
+
+## Camera Modes
+
+### beginMode2D
+
+Initializes 2D mode with custom camera.
+
+<ParamField path="camera" type="Camera2D" required>
+  2D camera configuration
+</ParamField>
+
+```wren
+import "raylib" for Raylib, Camera2D, Vector2, Color, Rectangle
+
+var screenWidth = 800
+var screenHeight = 450
+
+Raylib.initWindow(screenWidth, screenHeight, "2D Camera Example")
+
+var player = Rectangle.new(400, 280, 40, 40)
+var camera = Camera2D.new(
+  Vector2.new(screenWidth / 2.0, screenHeight / 2.0),  // offset
+  Vector2.new(player.x + 20.0, player.y + 20.0),       // target
+  1.0,  // zoom
+  0.0   // rotation
+)
+
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+  // Update camera target to follow player
+  camera.target = Vector2.new(player.x + 20, player.y + 20)
+  
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  Raylib.beginMode2D(camera)
+  
+  // Draw world-space objects
+  Raylib.drawRectangle(-6000, 320, 13000, 8000, Color.DarkGray)
+  Raylib.drawRectangleRec(player, Color.Red)
+  
+  Raylib.endMode2D()
+  
+  // Draw screen-space UI
+  Raylib.drawText("2D Camera", 10, 10, 20, Color.Black)
+  
+  Raylib.endDrawing()
+}
+```
+
+### endMode2D
+
+Ends 2D mode.
+
+### beginMode3D
+
+Initializes 3D mode with custom camera.
+
+<ParamField path="camera" type="Camera3D" required>
+  3D camera configuration
+</ParamField>
+
+```wren
+Raylib.beginMode3D(camera3D)
+// Draw 3D objects
+Raylib.endMode3D()
+```
+
+### endMode3D
+
+Ends 3D mode.
+
+## Render Texture Mode
+
+### beginTextureMode
+
+Initializes render texture for drawing.
+
+<ParamField path="target" type="RenderTexture2D" required>
+  Render texture target
+</ParamField>
+
+```wren
+// Create render texture
+var renderTexture = Raylib.loadRenderTexture(800, 450)
+
+// Draw to render texture
+Raylib.beginTextureMode(renderTexture)
+Raylib.clearBackground(Color.RayWhite)
+Raylib.drawCircle(400, 225, 50, Color.Red)
+Raylib.endTextureMode()
+
+// Draw render texture to screen
+Raylib.beginDrawing()
+Raylib.clearBackground(Color.Black)
+Raylib.drawTexture(renderTexture.texture, 0, 0, Color.White)
+Raylib.endDrawing()
+
+Raylib.unloadRenderTexture(renderTexture)
+```
+
+### endTextureMode
+
+Ends drawing to render texture.
+
+## Shader Mode
+
+### beginShaderMode
+
+Begins custom shader drawing.
+
+<ParamField path="shader" type="Shader" required>
+  Shader to use for rendering
+</ParamField>
+
+```wren
+var shader = Raylib.loadShader(null, "shader.fs")
+
+Raylib.beginDrawing()
+Raylib.clearBackground(Color.RayWhite)
+
+Raylib.beginShaderMode(shader)
+// Draw with shader applied
+Raylib.drawRectangle(100, 100, 200, 200, Color.Red)
+Raylib.endShaderMode()
+
+Raylib.endDrawing()
+```
+
+### endShaderMode
+
+Ends shader mode.
+
+## Blend Mode
+
+### beginBlendMode
+
+Begins blending mode (alpha, additive, multiplied, subtract, custom).
+
+<ParamField path="mode" type="Number" required>
+  Blend mode (0=ALPHA, 1=ADDITIVE, 2=MULTIPLIED, 3=ADD_COLORS, 4=SUBTRACT_COLORS, 5=ALPHA_PREMULTIPLY, 6=CUSTOM, 7=CUSTOM_SEPARATE)
+</ParamField>
+
+```wren
+// Use additive blending for light effects
+Raylib.beginBlendMode(1)  // BLEND_ADDITIVE
+Raylib.drawCircle(100, 100, 50, Color.Red)
+Raylib.drawCircle(120, 100, 50, Color.Blue)
+Raylib.endBlendMode()
+```
+
+### endBlendMode
+
+Ends blending mode (reset to default: alpha blending).
+
+## Scissor Mode
+
+### beginScissorMode
+
+Begins scissor mode (define screen area for rendering).
+
+<ParamField path="x" type="Number" required>
+  Scissor area X position
+</ParamField>
+
+<ParamField path="y" type="Number" required>
+  Scissor area Y position
+</ParamField>
+
+<ParamField path="width" type="Number" required>
+  Scissor area width
+</ParamField>
+
+<ParamField path="height" type="Number" required>
+  Scissor area height
+</ParamField>
+
+```wren
+// Only draw within this rectangle
+Raylib.beginScissorMode(100, 100, 400, 300)
+Raylib.drawCircle(300, 250, 100, Color.Red)
+Raylib.endScissorMode()
+```
+
+### endScissorMode
+
+Ends scissor mode.
+
+## VR Stereo Mode
+
+### beginVrStereoMode
+
+Begins stereo rendering (requires VR simulator).
+
+<ParamField path="config" type="VrStereoConfig" required>
+  VR stereo configuration
+</ParamField>
+
+```wren
+var config = Raylib.loadVrStereoConfig(device)
+Raylib.beginVrStereoMode(config)
+// Draw VR scene
+Raylib.endVrStereoMode()
+Raylib.unloadVrStereoConfig(config)
+```
+
+### endVrStereoMode
+
+Ends stereo rendering.
+
+## Drawing Pipeline Overview
+
+```wren
+Raylib.beginDrawing()
+  
+  Raylib.clearBackground(Color.RayWhite)
+  
+  // 2D camera space
+  Raylib.beginMode2D(camera)
+    // World-space drawing
+  Raylib.endMode2D()
+  
+  // Screen space UI
+  Raylib.drawText("UI Text", 10, 10, 20, Color.Black)
+  
+Raylib.endDrawing()
+```
+
+## Best Practices
+
+<Tip>
+  Use `beginMode2D` and `endMode2D` to separate world-space objects from screen-space UI elements.
+</Tip>
+
+<Note>
+  All drawing commands must be between `beginDrawing()` and `endDrawing()` calls.
+</Note>
+
+<Warning>
+  Always pair begin/end calls:
+  - `beginDrawing` with `endDrawing`
+  - `beginMode2D` with `endMode2D`
+  - `beginTextureMode` with `endTextureMode`
+  - `beginShaderMode` with `endShaderMode`
+  - `beginBlendMode` with `endBlendMode`
+  - `beginScissorMode` with `endScissorMode`
+</Warning>

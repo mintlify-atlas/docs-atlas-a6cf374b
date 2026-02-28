@@ -1,0 +1,231 @@
+---
+title: Building Executables
+description: Build native executables for Linux and Windows using Docker
+---
+
+## Overview
+
+Talon provides the `talon init-exe` command to set up a cross-platform build environment for creating native executables. This generates Docker configuration files that handle the build process for Linux and Windows targets using the Zig build system.
+
+## Prerequisites
+
+<Warning>
+You must have Docker and Docker Compose installed on your system before using this feature.
+</Warning>
+
+- Docker Engine 20.10 or later
+- Docker Compose 2.0 or later
+- Your Talon project with a main Wren script
+
+## Initializing Executable Build
+
+<Steps>
+  <Step title="Run the init-exe command">
+    Navigate to your project directory and run:
+    
+    ```bash
+    talon init-exe main.wren
+    ```
+    
+    Replace `main.wren` with the path to your main Wren script file.
+  </Step>
+  
+  <Step title="Generated files">
+    The command creates two files in your project directory:
+    
+    - `Dockerfile` - Contains the build configuration
+    - `docker-compose.yml` - Orchestrates the build process
+  </Step>
+</Steps>
+
+## Generated Docker Configuration
+
+### Dockerfile
+
+The generated Dockerfile uses Alpine Linux and downloads the Zig compiler to build your executable:
+
+```dockerfile
+FROM alpine AS compiler
+
+ARG VERSION=0.14.0
+
+RUN apk update && apk add curl tar xz
+
+RUN curl https://ziglang.org/download/$VERSION/zig-linux-$(uname -m)-$VERSION.tar.xz -O && \
+    tar -xf *.tar.xz && \
+    mv zig-linux-$(uname -m)-$VERSION /compiler
+
+WORKDIR /build
+COPY . /build
+
+# Generates build.zig.zon with project dependencies
+RUN echo '.{' \
+    '    .name = "your-project-name",' \
+    '    .version = "0.0.0",' \
+    '    .dependencies = .{' \
+    '        .wren = .{ ... },' \
+    '        .raylib = .{ ... },' \
+    '        .tolan = .{ ... }' \
+    '    }' \
+    '}' > build.zig.zon
+
+# Generates build.zig build script
+RUN cat <<'EOF' > build.zig
+# ... build configuration ...
+EOF
+```
+
+<Info>
+The project name is automatically detected from your directory name. The `{{{ PROJECT_NAME }}}` and `{{{ MAIN_FILE }}}` placeholders are replaced with your actual values.
+</Info>
+
+### docker-compose.yml
+
+The Docker Compose file simplifies the build process:
+
+```yaml
+services:
+  camera:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./dist:/build/zig-out/bin
+    working_dir: /build
+    command: /compiler/zig build -Dtarget=x86_64-windows
+```
+
+## Building Your Executable
+
+<Steps>
+  <Step title="Build for Windows">
+    The default configuration builds a Windows executable:
+    
+    ```bash
+    docker-compose up
+    ```
+    
+    This creates a `dist/` directory with your Windows `.exe` file.
+  </Step>
+  
+  <Step title="Build for Linux (optional)">
+    To build for Linux instead, modify the command in `docker-compose.yml`:
+    
+    ```yaml
+    command: /compiler/zig build -Dtarget=x86_64-linux
+    ```
+    
+    Or build directly with Docker:
+    
+    ```bash
+    docker-compose run camera /compiler/zig build -Dtarget=x86_64-linux
+    ```
+  </Step>
+  
+  <Step title="Build with optimization">
+    For release builds, add the optimize flag:
+    
+    ```bash
+    docker-compose run camera /compiler/zig build -Dtarget=x86_64-windows -Doptimize=ReleaseSafe
+    ```
+  </Step>
+</Steps>
+
+## Build Process Details
+
+### Asset Embedding
+
+The build system automatically embeds all `.wren` files from your project directory:
+
+```zig
+fn checkWrenFiles(
+    allocator: std.mem.Allocator,
+    files: *std.ArrayList([]const u8),
+    b: *std.Build,
+    base_path: []const u8,
+    rel_path: []const u8,
+    step: *std.Build.Step,
+) !void {
+    // Recursively finds all .wren files
+    // Skips .zig-cache and zig-out directories
+}
+```
+
+<Info>
+All Wren script files in your project are embedded into the final executable, making it fully self-contained.
+</Info>
+
+### Dependencies
+
+The build automatically includes:
+
+- **Wren** - The Wren scripting language runtime
+- **Raylib** - Graphics and game development library
+- **Talon** - The Talon framework core
+
+### Executable Entry Point
+
+The generated `build.zig` creates a custom entry point:
+
+```zig
+pub fn main() !void {
+    try tolan.run(mainFile, embeddedFilesMap);
+}
+```
+
+This runs your main Wren file with access to all embedded assets.
+
+## Supported Targets
+
+| Target | Architecture | Status |
+|--------|--------------|--------|
+| Windows | x86_64 | Full support |
+| Linux | x86_64 | Full support |
+| macOS | x86_64, arm64 | Requires native build |
+
+<Warning>
+macOS targets require building on a macOS system with Xcode installed. Docker-based cross-compilation to macOS is not supported.
+</Warning>
+
+## Output Structure
+
+After building, your project structure will look like:
+
+```
+my-project/
+├── main.wren
+├── Dockerfile
+├── docker-compose.yml
+└── dist/
+    └── my-project.exe  # or my-project (Linux)
+```
+
+## Troubleshooting
+
+### Build fails with "Failed to fetch dependencies"
+
+<Info>
+Ensure your Docker container has internet access to download Zig packages from GitHub.
+</Info>
+
+### Wrong architecture built
+
+Verify the `-Dtarget` flag in your `docker-compose.yml` matches your intended platform:
+- Windows: `-Dtarget=x86_64-windows`
+- Linux: `-Dtarget=x86_64-linux`
+
+### Large executable size
+
+Use release optimization to reduce size:
+
+```bash
+-Doptimize=ReleaseSmall  # Smallest size
+-Doptimize=ReleaseSafe   # Balance of size and safety
+-Doptimize=ReleaseFast   # Maximum performance
+```
+
+## Next Steps
+
+- Learn about [Building for WebAssembly](/deployment/building-wasm)
+- Understand the [Docker Setup](/deployment/docker-setup) in detail
+- Deploy your executable to production environments

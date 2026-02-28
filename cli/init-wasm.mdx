@@ -1,0 +1,426 @@
+---
+title: 'talon init-wasm'
+description: 'Generate configuration for building WebAssembly games'
+---
+
+## Overview
+
+The `init-wasm` command generates Docker-based build configuration files that enable you to compile your Talon game to WebAssembly (WASM). This allows you to deploy your game as a web application that runs in any modern browser.
+
+## Syntax
+
+```bash
+talon init-wasm <file.wren>
+```
+
+<ParamField path="file.wren" type="string" required>
+  Path to your main Wren script file. This will be used as the entry point for the compiled WebAssembly module.
+</ParamField>
+
+## What It Creates
+
+Running `init-wasm` generates three files in your current directory:
+
+### 1. Dockerfile
+
+A Docker configuration that:
+- Sets up an Emscripten environment for WASM compilation
+- Compiles your Talon game to WebAssembly
+- Generates all necessary web assets
+- Outputs files to the `dist/` directory
+
+### 2. docker-compose.yml
+
+A Docker Compose file that:
+- Defines the build service
+- Configures volume mounts
+- Sets up output directories
+- Uses your project directory name as the service name
+
+### 3. shell.html
+
+A custom HTML shell template that:
+- Provides the webpage structure for your game
+- Loads the WebAssembly module
+- Handles canvas rendering
+- Manages browser integration
+
+## Generated Files
+
+All files are customized with:
+
+- **Project Name**: Extracted from your current directory name
+- **Main File**: The `.wren` file you specified as the entry point
+
+## Build Process
+
+### Step 1: Initialize
+
+Generate the WASM build configuration:
+
+```bash
+talon init-wasm index.wren
+```
+
+This creates:
+- `Dockerfile`
+- `docker-compose.yml`
+- `shell.html`
+
+### Step 2: Build
+
+Compile the WebAssembly module using Docker Compose:
+
+```bash
+docker compose up --build -d
+```
+
+This will:
+1. Build the Docker image with Emscripten
+2. Compile your game to WASM
+3. Generate HTML, JavaScript, and WASM files
+4. Output web assets to `dist/` folder
+
+### Step 3: Deploy
+
+Find your web build in the `dist/` directory:
+
+```
+dist/
+  ├── index.html          # Main HTML file
+  ├── index.js            # JavaScript loader
+  ├── index.wasm          # WebAssembly binary
+  └── index.data          # Embedded assets (if any)
+```
+
+## Complete Example
+
+### Project Structure
+
+```
+breakout-game/
+  ├── main.wren
+  ├── game.wren
+  ├── paddle.wren
+  └── ball.wren
+```
+
+### Initialize WASM Build
+
+```bash
+cd breakout-game
+talon init-wasm main.wren
+```
+
+**Output:**
+```
+breakout-game/
+  ├── main.wren
+  ├── game.wren
+  ├── paddle.wren
+  ├── ball.wren
+  ├── Dockerfile          ← Generated
+  ├── docker-compose.yml  ← Generated
+  └── shell.html          ← Generated
+```
+
+### Build WebAssembly
+
+```bash
+docker compose up --build -d
+```
+
+**Output:**
+```bash
+[+] Building 89.3s
+[+] Running 1/1
+ ✔ Container breakout-game-build-1 Started
+```
+
+### Check Results
+
+```
+breakout-game/
+  ├── main.wren
+  ├── game.wren
+  ├── paddle.wren
+  ├── ball.wren
+  ├── Dockerfile
+  ├── docker-compose.yml
+  ├── shell.html
+  └── dist/                ← Build output
+      ├── index.html
+      ├── index.js
+      ├── index.wasm
+      └── index.data
+```
+
+## Deployment
+
+### Local Testing
+
+Serve the `dist/` directory with a local web server:
+
+```bash
+cd dist
+python3 -m http.server 8000
+```
+
+Then open `http://localhost:8000` in your browser.
+
+### Static Hosting
+
+Upload the `dist/` directory to any static hosting service:
+
+- **GitHub Pages**: Commit `dist/` and enable Pages
+- **Netlify**: Drag and drop `dist/` folder
+- **Vercel**: Deploy with `vercel dist/`
+- **itch.io**: Upload as HTML5 game
+- **AWS S3**: Sync `dist/` to an S3 bucket
+
+### Custom Domain
+
+After uploading, your game will be accessible at:
+
+```
+https://yourdomain.com/
+```
+
+## Requirements
+
+### Docker
+
+You must have Docker installed and running:
+
+```bash
+docker --version  # Should show Docker version
+```
+
+If Docker is not installed:
+- **Linux**: Install via package manager or [docker.com](https://docs.docker.com/engine/install/)
+- **macOS**: Install [Docker Desktop](https://www.docker.com/products/docker-desktop)
+- **Windows**: Install [Docker Desktop](https://www.docker.com/products/docker-desktop)
+
+### Docker Compose
+
+Modern Docker installations include Docker Compose v2:
+
+```bash
+docker compose version
+```
+
+### Browser Requirements
+
+Your game will run in browsers with WebAssembly support:
+
+- Chrome 57+
+- Firefox 52+
+- Safari 11+
+- Edge 16+
+
+All modern browsers (2017+) support WebAssembly.
+
+## File Templates
+
+The generated files use templates with placeholders:
+
+- `{{{ PROJECT_NAME }}}` - Replaced with your directory name
+- `{{{ MAIN_FILE }}}` - Replaced with your specified `.wren` file
+
+## Advanced Usage
+
+### Customizing HTML Shell
+
+The `shell.html` file can be customized:
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Game</title>
+  <style>
+    /* Add custom styles */
+    canvas { border: 2px solid #000; }
+  </style>
+</head>
+<body>
+  <!-- Add UI elements -->
+  <canvas id="canvas"></canvas>
+  <script src="index.js"></script>
+</body>
+</html>
+```
+
+### Embedding Assets
+
+To include game assets in the WASM build:
+
+1. Modify the `Dockerfile` to copy asset directories
+2. Use Emscripten's `--embed-file` or `--preload-file` flags
+3. Access assets in Wren code as normal file paths
+
+### Optimizing Build Size
+
+Modify the Dockerfile to add optimization flags:
+
+```dockerfile
+# Add -O3 for aggressive optimization
+# Add -s WASM=1 for WASM-only output
+# Add --closure 1 for JavaScript minification
+```
+
+## Browser Features
+
+Your WASM game has access to:
+
+- **Canvas Rendering**: Full Raylib 2D drawing API
+- **Input Handling**: Keyboard and mouse events
+- **Audio**: WebAudio for sound playback (if implemented)
+- **File System**: Virtual file system via Emscripten
+- **Local Storage**: Browser storage APIs
+
+## Troubleshooting
+
+### Docker Not Found
+
+```bash
+bash: docker: command not found
+```
+
+**Solution**: Install Docker Desktop or Docker Engine.
+
+### Build Fails
+
+Check Docker logs:
+
+```bash
+docker compose logs
+```
+
+Common issues:
+- Syntax errors in Wren code
+- Missing module imports
+- Unsupported Raylib features
+- Memory allocation issues
+
+### Black Screen in Browser
+
+Check browser console (F12) for errors:
+
+- WebAssembly module failed to load
+- JavaScript syntax errors
+- CORS issues (use proper web server)
+- Missing files
+
+### Slow Loading
+
+Large WASM files take time to download:
+
+- Optimize assets
+- Use compression (gzip)
+- Consider a loading screen
+- Split large games into modules
+
+### CORS Errors
+
+When testing locally, use a proper web server:
+
+```bash
+# Don't: file:///path/to/index.html ❌
+# Do: http://localhost:8000 ✓
+```
+
+## Build Time
+
+First build may take several minutes:
+- Docker image download: ~2-3 minutes
+- Emscripten setup: ~1-2 minutes
+- Compilation: ~1-3 minutes
+- Total: ~4-8 minutes
+
+Subsequent builds are faster due to Docker layer caching.
+
+## Performance
+
+WebAssembly provides near-native performance:
+
+- **Execution Speed**: ~80-90% of native code
+- **Startup Time**: Depends on WASM module size
+- **Memory**: Limited by browser heap (typically 1-4GB)
+- **Graphics**: Hardware accelerated via WebGL
+
+## Comparison with Native Builds
+
+| Feature | init-wasm | init-exe |
+|---------|-----------|----------|
+| Output | HTML + WASM | Native binaries |
+| Performance | ~80-90% native | 100% native |
+| Distribution | Web hosting | Download & install |
+| Updates | Instant (reload page) | Manual download |
+| Platform support | Any modern browser | Linux, Windows |
+| File size | Smaller | Larger |
+| Installation | None | Required |
+
+## Related Commands
+
+- [`talon run`](/cli/run) - Run your game during development
+- [`talon --hot`](/cli/hot-reload) - Develop with automatic reloading
+- [`talon init-exe`](/cli/init-exe) - Build native executables
+
+## Best Practices
+
+1. **Test Locally**: Verify WASM build works before deploying
+2. **Version Control**: Add `Dockerfile`, `docker-compose.yml`, and `shell.html` to Git
+3. **Ignore Build Output**: Add `dist/` to `.gitignore`
+4. **Optimize Assets**: Compress images and audio files
+5. **Mobile Support**: Test on mobile browsers for touch input
+6. **Loading Screen**: Add a loading indicator for large games
+7. **Error Handling**: Provide fallbacks for unsupported features
+
+## Example Deployment
+
+### Deploying to itch.io
+
+1. Build your game:
+   ```bash
+   talon init-wasm main.wren
+   docker compose up --build
+   ```
+
+2. Create a ZIP of the `dist/` folder:
+   ```bash
+   cd dist
+   zip -r ../game.zip .
+   ```
+
+3. Upload to itch.io:
+   - Create new project
+   - Select "HTML" as project type
+   - Upload `game.zip`
+   - Check "This file will be played in the browser"
+   - Set canvas size
+
+### Deploying to GitHub Pages
+
+```bash
+# Build
+talon init-wasm main.wren
+docker compose up --build
+
+# Deploy
+cp -r dist/* docs/
+git add docs/
+git commit -m "Deploy WASM build"
+git push
+
+# Enable GitHub Pages pointing to /docs
+```
+
+## Next Steps
+
+After building for WASM:
+
+1. **Test**: Verify in multiple browsers
+2. **Optimize**: Reduce file sizes and loading times
+3. **Polish**: Add loading screens and error messages
+4. **Share**: Deploy to web hosting or game platforms

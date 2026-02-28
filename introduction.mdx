@@ -1,0 +1,173 @@
+---
+title: "Welcome to Talon"
+description: "A 2D game framework that combines the power of Raylib with the elegance of Wren scripting"
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/hero-light.svg"
+  alt="Talon Hero Light"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/hero-dark.svg"
+  alt="Talon Hero Dark"
+/>
+
+## What is Talon?
+
+Talon is a 2D game framework that uses [Raylib](https://www.raylib.com/) as its rendering engine and [Wren](https://wren.io) as its scripting language. It's designed to make game development fast, enjoyable, and productive by combining two exceptional projects:
+
+- **Raylib**: A simple and powerful graphics library
+- **Wren**: A lightweight, fast scripting language you can master in under 30 minutes
+
+Talon is inspired by [love2d](https://love2d.org/) and aims to be a modern alternative for 2D game development.
+
+## Why Talon?
+
+<CardGroup cols={2}>
+  <Card title="Simple & Fast" icon="bolt">
+    Wren is incredibly easy to learn and blazingly fast. Get started writing games in minutes, not hours.
+  </Card>
+  <Card title="Hot Reload" icon="fire">
+    See your changes instantly with built-in hot reload. No need to restart your game every time you make a change.
+  </Card>
+  <Card title="Cross-Platform" icon="desktop">
+    Build for Linux, Windows, and Web (WASM). One codebase, multiple platforms.
+  </Card>
+  <Card title="Raylib Powered" icon="gamepad">
+    Access almost all Raylib functions directly from Wren with a clean, consistent API.
+  </Card>
+</CardGroup>
+
+## Key Features
+
+<AccordionGroup>
+  <Accordion icon="code" title="Complete Raylib Bindings">
+    Almost all Raylib functions are exposed through the `Raylib` class. Function names use snake_case (e.g., `Raylib.initWindow()` instead of `InitWindow`).
+    
+    Raylib structs like `Camera2D`, `Vector2`, `Rectangle`, and `Color` are available as Wren classes with the same names.
+  </Accordion>
+
+  <Accordion icon="fire" title="Hot Reload on File Change">
+    Run Talon with the `--hot` flag to enable automatic reloading when your Wren files change:
+    
+    ```bash
+    talon --hot index.wren
+    ```
+    
+    Perfect for rapid iteration and UI development.
+  </Accordion>
+
+  <Accordion icon="box" title="Build Executables for Linux/Windows">
+    Use Docker-based builds to create distributable executables:
+    
+    ```bash
+    talon init-exe index.wren
+    docker compose up --build -d
+    ```
+    
+    Find your builds in the `dist/` folder.
+  </Accordion>
+
+  <Accordion icon="globe" title="Build for Web with WASM">
+    Deploy your games to the web using Emscripten:
+    
+    ```bash
+    talon init-wasm index.wren
+    docker compose up --build -d
+    ```
+    
+    Your WASM builds will be in the `dist/` folder.
+  </Accordion>
+
+  <Accordion icon="puzzle-piece" title="Extend with Dynamic Libraries">
+    Add custom functionality using `.so` or `.dll` files. See the `examples/extend` directory for implementation details.
+  </Accordion>
+
+  <Accordion icon="play" title="Interactive Playground">
+    Try Talon directly in your browser without any installation at [jossephus.github.io/talon](https://jossephus.github.io/talon/).
+  </Accordion>
+</AccordionGroup>
+
+## Quick Example
+
+Here's a simple "Hello World" window in Talon:
+
+```wren
+import "raylib" for Color, Raylib
+
+var width = 800
+var height = 450
+
+Raylib.initWindow(width, height, "My First Talon Game")
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.Red)
+  Raylib.drawText("Hello, Talon!", 190, 200, 20, Color.White)
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+## Get Started
+
+<CardGroup cols={2}>
+  <Card
+    title="Installation"
+    icon="download"
+    href="/installation"
+  >
+    Download Talon and set up your development environment.
+  </Card>
+  <Card
+    title="Quickstart Guide"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Create your first Talon game in minutes with our step-by-step guide.
+  </Card>
+  <Card
+    title="Learn Wren"
+    icon="book"
+    href="https://wren.io"
+  >
+    Master Wren in under 30 minutes with the official documentation.
+  </Card>
+  <Card
+    title="Explore Examples"
+    icon="code"
+    href="/examples/basic-window"
+  >
+    Browse complete game examples including Breakout and Asteroids.
+  </Card>
+</CardGroup>
+
+## Project Status
+
+Talon is actively developed with the goal of becoming a stable, feature-rich 2D game framework. Currently implemented features include:
+
+- Core Raylib rendering functions
+- Input handling (keyboard, mouse)
+- 2D camera system
+- Texture and sprite support
+- Basic shapes and text rendering
+- Hot reload development workflow
+- Cross-platform building (Linux, Windows, Web)
+
+Planned features include Audio, Physics, and expanded Math support.
+
+## Open Source
+
+Talon is open source and licensed under the MIT License. Contributions are welcome!
+
+<Card
+  title="View on GitHub"
+  icon="github"
+  href="https://github.com/jossephus/talon"
+>
+  Star the project, report issues, or contribute to the codebase.
+</Card>

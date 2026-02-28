@@ -1,0 +1,207 @@
+---
+title: Dynamic Libraries
+description: Extend Talon with custom C/C++ libraries at runtime
+---
+
+Talon supports loading external shared libraries (`.so` on Linux, `.dll` on Windows) at runtime, allowing you to extend the engine with custom C/C++ code without modifying the core codebase.
+
+## Overview
+
+The dynamic library system enables you to:
+
+- Write performance-critical code in C/C++
+- Integrate existing C libraries into your Talon project
+- Extend Talon's functionality without rebuilding the engine
+- Call native functions directly from Wren scripts
+
+## Creating a Dynamic Library
+
+### 1. Write Your C Function
+
+Create a C file (e.g., `add.c`) with functions that follow the Wren VM calling convention:
+
+```c title="examples/extend/add.c"
+#include "wren.h"
+#include <stdio.h>
+
+void wren_c_embed_add(WrenVM* vm) {
+    double a = wrenGetSlotDouble(vm, 1);
+    double b = wrenGetSlotDouble(vm, 2);
+    wrenSetSlotDouble(vm, 0, (double)(a + b));
+}
+```
+
+<Note>
+  All foreign functions must:
+  - Take a single `WrenVM*` parameter
+  - Use `callconv(.c)` calling convention
+  - Return `void`
+  - Interact with Wren through slot-based API
+</Note>
+
+### 2. Build the Shared Library
+
+Use Zig's build system to compile your C code into a shared library:
+
+```zig title="examples/extend/build.zig"
+const add = b.addSharedLibrary(.{
+    .name = "add",
+    .target = target,
+    .optimize = optimize,
+    .link_libc = true,
+});
+
+add.addCSourceFiles(.{ .root = b.path("."), .files = &.{
+    "add.c",
+} });
+b.installArtifact(add);
+
+// Link with Wren library for header access
+const wren_lib = tolan_lib.artifact("wren");
+add.linkLibrary(wren_lib);
+```
+
+This generates:
+- `add.dll` on Windows
+- `libadd.so` on Linux
+- `libadd.dylib` on macOS
+
+## Using Dynamic Libraries in Wren
+
+### 1. Load the Library
+
+Use the `embed` module to register foreign functions:
+
+```wren title="examples/extend/game.wren"
+import "embed" for Load
+
+// Register the foreign function
+Load.foreignFunction("C.add(_,_)", "add.dll", "wren_c_embed_add")
+
+class C {
+  foreign static add(a, b)
+}
+```
+
+**Parameters:**
+1. `"C.add(_,_)"` - The Wren signature (class.method with arity)
+2. `"add.dll"` - Path to the shared library
+3. `"wren_c_embed_add"` - The C function name to bind
+
+### 2. Call the Function
+
+Once registered, use it like any other Wren method:
+
+```wren title="examples/extend/main.wren"
+import "./game" for C
+
+System.print(C.add(3, 2))  // Output: 5
+```
+
+## Wren Slot API Reference
+
+When writing C functions for Talon, use these Wren API functions:
+
+### Getting Values from Wren
+
+```c
+// Numbers
+double wrenGetSlotDouble(WrenVM* vm, int slot);
+
+// Strings
+const char* wrenGetSlotString(WrenVM* vm, int slot);
+
+// Booleans
+bool wrenGetSlotBool(WrenVM* vm, int slot);
+
+// Foreign objects
+void* wrenGetSlotForeign(WrenVM* vm, int slot);
+```
+
+### Returning Values to Wren
+
+```c
+// Return slot 0 is used for return values
+void wrenSetSlotDouble(WrenVM* vm, int slot, double value);
+void wrenSetSlotString(WrenVM* vm, int slot, const char* text);
+void wrenSetSlotBool(WrenVM* vm, int slot, bool value);
+```
+
+<Note>
+  Slot 0 is reserved for the return value. Arguments start at slot 1.
+</Note>
+
+## Platform-Specific Implementation
+
+Talon handles platform differences automatically:
+
+**Windows (`src/common.zig:118-136`):**
+```zig
+const handle = c.LoadLibraryA(libname.ptr);
+const add_fn_ptr = c.GetProcAddress(handle, symbol_name.ptr);
+return @ptrFromInt(@intFromPtr(add_fn_ptr));
+```
+
+**Linux/macOS (`src/common.zig:142`):**
+```zig
+return @ptrFromInt(@intFromPtr(c.dlsym(main_program_handle, method.bind_name)));
+```
+
+## Complete Example
+
+See the full working example in the source tree:
+
+- **C source:** `examples/extend/add.c`
+- **Build script:** `examples/extend/build.zig`
+- **Wren loader:** `examples/extend/game.wren`
+- **Usage:** `examples/extend/main.wren`
+
+## Advanced Use Cases
+
+### Passing Complex Types
+
+For structs and complex types, use foreign classes:
+
+```c
+void wren_create_vector(WrenVM* vm) {
+    void* foreign = wrenSetSlotNewForeign(vm, 0, 0, sizeof(Vector3));
+    Vector3* vec = (Vector3*)foreign;
+    vec->x = wrenGetSlotDouble(vm, 1);
+    vec->y = wrenGetSlotDouble(vm, 2);
+    vec->z = wrenGetSlotDouble(vm, 3);
+}
+```
+
+### Error Handling
+
+<Warning>
+  If library loading fails, Talon will print an error and return `null`:
+  - "Failed to load DLL: {name}" - Library file not found
+  - "Failed to find symbol: {name}" - Function name not exported
+</Warning>
+
+Always check that:
+1. The library file is in the correct location
+2. Function names match exactly (C name mangling)
+3. The library is compiled for the target platform
+
+## Performance Considerations
+
+- **Dynamic loading overhead** is minimal (one-time at startup)
+- **Function calls** have the same performance as built-in bindings
+- **No runtime penalty** after initial load
+- Consider dynamic libraries for:
+  - CPU-intensive algorithms
+  - Existing C/C++ codebases
+  - Platform-specific functionality
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Custom Bindings" icon="code" href="/advanced/custom-bindings">
+    Learn how to add permanent Raylib bindings
+  </Card>
+  <Card title="Build System" icon="hammer" href="/examples/build-system">
+    Configure Zig build scripts for your project
+  </Card>
+</CardGroup>

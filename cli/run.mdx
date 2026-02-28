@@ -1,0 +1,157 @@
+---
+title: 'talon run'
+description: 'Execute Wren scripts with the Talon runtime'
+---
+
+## Overview
+
+The basic `talon` command runs a Wren script file using the Talon runtime environment with Raylib bindings. This is the primary way to execute your Talon game or application.
+
+## Syntax
+
+```bash
+talon <file.wren>
+```
+
+<ParamField path="file.wren" type="string" required>
+  Path to the Wren script file to execute. Can be a relative or absolute path.
+</ParamField>
+
+## Behavior
+
+When you run a Talon script:
+
+1. **File Loading**: The runtime opens and reads the specified `.wren` file
+2. **VM Initialization**: Creates a Wren virtual machine with Raylib bindings configured
+3. **Module Resolution**: Automatically resolves and loads imported modules (like `raylib`)
+4. **Script Execution**: Interprets and executes the Wren code
+5. **Error Reporting**: Reports compilation or runtime errors to the console
+
+## Exit Codes
+
+The command returns different exit codes based on execution result:
+
+- **Success**: Script executed without errors
+- **Compile Error**: Syntax or compilation errors in the Wren code
+- **Runtime Error**: Errors during script execution
+- **File Error**: Unable to open or read the specified file
+
+## Examples
+
+### Basic Usage
+
+Run a simple Wren script:
+
+```bash
+talon index.wren
+```
+
+### Running Examples
+
+Execute one of the example games:
+
+```bash
+talon examples/breakout/main.wren
+```
+
+### Typical Output
+
+```bash
+$ talon index.wren
+Success!
+```
+
+If there's an error:
+
+```bash
+$ talon broken.wren
+Compile Error!
+[line 5] Error at 'foo': Undefined variable.
+```
+
+## Common Use Cases
+
+### Development Workflow
+
+During development, you'll frequently run your main script:
+
+```bash
+talon main.wren
+```
+
+For faster iteration with automatic reloading, consider using the [`--hot` flag](/cli/hot-reload) instead.
+
+### Testing Scripts
+
+Quickly test a standalone Wren file:
+
+```bash
+talon test.wren
+```
+
+### Running Different Entry Points
+
+Switch between different entry points for your game:
+
+```bash
+talon game.wren      # Main game
+talon menu.wren      # Menu system
+talon editor.wren    # Level editor
+```
+
+## File Requirements
+
+The specified file must:
+
+- Have a `.wren` extension
+- Exist in the file system
+- Contain valid Wren syntax
+- Be readable by the current user
+
+## Module Imports
+
+Your script can import Talon's built-in modules:
+
+```wren
+import "raylib" for Color, Raylib, Vector2
+import "math" for Math
+```
+
+Relative imports are resolved from the script's directory:
+
+```wren
+import "./game" for Game
+import "../utils" for Utils
+```
+
+## Related Commands
+
+- [`talon --hot`](/cli/hot-reload) - Run with automatic reloading on file changes
+- [`talon init-exe`](/cli/init-exe) - Generate build configuration for executables
+- [`talon init-wasm`](/cli/init-wasm) - Generate build configuration for WebAssembly
+
+## Troubleshooting
+
+### "We require a wren script to run"
+
+You didn't specify a file to run. Provide a `.wren` file as an argument:
+
+```bash
+talon main.wren
+```
+
+### "Failed to open file"
+
+The specified file doesn't exist or isn't readable. Check:
+
+- The file path is correct
+- The file exists in the specified location
+- You have read permissions
+
+### "Undefined variable" Errors
+
+Ensure you're importing required modules:
+
+```wren
+import "raylib" for Raylib, Color
+```

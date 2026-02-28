@@ -1,0 +1,483 @@
+---
+title: "Math Module"
+description: "Mathematical functions for common operations in Talon"
+---
+
+The Math module provides a comprehensive set of mathematical functions for trigonometry, logarithms, exponentiation, rounding, and comparisons.
+
+## Import
+
+```wren
+import "math" for Math
+```
+
+## Trigonometric Functions
+
+### sin
+
+Calculates the sine of an angle in radians.
+
+```wren
+Math.sin(angle)
+```
+
+<ParamField path="angle" type="number">
+  The angle in radians
+</ParamField>
+
+**Returns:** The sine of the angle
+
+**Example:**
+
+```wren
+import "math" for Math
+
+var result = Math.sin(Math.PI / 2)  // Returns 1.0
+System.print(result)
+```
+
+---
+
+### cos
+
+Calculates the cosine of an angle in radians.
+
+```wren
+Math.cos(angle)
+```
+
+<ParamField path="angle" type="number">
+  The angle in radians
+</ParamField>
+
+**Returns:** The cosine of the angle
+
+**Example:**
+
+```wren
+import "math" for Math
+
+var result = Math.cos(0)  // Returns 1.0
+System.print(result)
+```
+
+---
+
+### tan
+
+Calculates the tangent of an angle in radians.
+
+```wren
+Math.tan(angle)
+```
+
+<ParamField path="angle" type="number">
+  The angle in radians
+</ParamField>
+
+**Returns:** The tangent of the angle
+
+**Example:**
+
+```wren
+import "math" for Math
+
+var result = Math.tan(Math.PI / 4)  // Returns approximately 1.0
+System.print(result)
+```
+
+## Exponential and Logarithmic Functions
+
+### exp
+
+Calculates e raised to the power of x (e^x).
+
+```wren
+Math.exp(x)
+```
+
+<ParamField path="x" type="number">
+  The exponent
+</ParamField>
+
+**Returns:** e raised to the power of x
+
+**Example:**
+
+```wren
+import "math" for Math
+
+var result = Math.exp(1)  // Returns approximately 2.718
+System.print(result)
+```
+
+---
+
+### exp2
+
+Calculates 2 raised to the power of x (2^x).
+
+```wren
+Math.exp2(x)
+```
+
+<ParamField path="x" type="number">
+  The exponent
+</ParamField>
+
+**Returns:** 2 raised to the power of x
+
+**Example:**
+
+```wren
+import "math" for Math
+
+var result = Math.exp2(8)  // Returns 256
+System.print(result)
+```
+
+---
+
+### pow
+
+Raises a number to a specified power.
+
+```wren
+Math.pow(base, exponent)
+```
+
+<ParamField path="base" type="number">
+  The base number
+</ParamField>
+
+<ParamField path="exponent" type="number">
+  The exponent
+</ParamField>
+
+**Returns:** The base raised to the exponent
+
+**Example:**
+
+```wren
+import "math" for Math
+
+var result = Math.pow(2, 3)  // Returns 8
+System.print(result)
+```
+
+---
+
+### log
+
+Calculates the natural logarithm (base e) of a number.
+
+```wren
+Math.log(x)
+```
+
+<ParamField path="x" type="number">
+  The number (must be positive)
+</ParamField>
+
+**Returns:** The natural logarithm of x
+
+**Example:**
+
+```wren
+import "math" for Math
+
+var result = Math.log(Math.E)  // Returns 1.0
+System.print(result)
+```
+
+---
+
+### log2
+
+Calculates the base-2 logarithm of a number.
+
+```wren
+Math.log2(x)
+```
+
+<ParamField path="x" type="number">
+  The number (must be positive)
+</ParamField>
+
+**Returns:** The base-2 logarithm of x
+
+**Example:**
+
+```wren
+import "math" for Math
+
+var result = Math.log2(256)  // Returns 8
+System.print(result)
+```
+
+---
+
+### log10
+
+Calculates the base-10 logarithm of a number.
+
+```wren
+Math.log10(x)
+```
+
+<ParamField path="x" type="number">
+  The number (must be positive)
+</ParamField>
+
+**Returns:** The base-10 logarithm of x
+
+**Example:**
+
+```wren
+import "math" for Math
+
+var result = Math.log10(1000)  // Returns 3
+System.print(result)
+```
+
+## Root and Power Functions
+
+### sqrt
+
+Calculates the square root of a number.
+
+```wren
+Math.sqrt(x)
+```
+
+<ParamField path="x" type="number">
+  The number (must be non-negative)
+</ParamField>
+
+**Returns:** The square root of x
+
+**Example:**
+
+```wren
+import "math" for Math
+
+var result = Math.sqrt(16)  // Returns 4
+System.print(result)
+```
+
+## Rounding Functions
+
+### floor
+
+Rounds a number down to the nearest integer.
+
+```wren
+Math.floor(x)
+```
+
+<ParamField path="x" type="number">
+  The number to round down
+</ParamField>
+
+**Returns:** The largest integer less than or equal to x
+
+**Example:**
+
+```wren
+import "math" for Math
+
+var result = Math.floor(3.7)  // Returns 3
+System.print(result)
+```
+
+---
+
+### ceil
+
+Rounds a number up to the nearest integer.
+
+```wren
+Math.ceil(x)
+```
+
+<ParamField path="x" type="number">
+  The number to round up
+</ParamField>
+
+**Returns:** The smallest integer greater than or equal to x
+
+**Example:**
+
+```wren
+import "math" for Math
+
+var result = Math.ceil(3.2)  // Returns 4
+System.print(result)
+```
+
+---
+
+### round
+
+Rounds a number to the nearest integer.
+
+```wren
+Math.round(x)
+```
+
+<ParamField path="x" type="number">
+  The number to round
+</ParamField>
+
+**Returns:** The nearest integer to x
+
+**Example:**
+
+```wren
+import "math" for Math
+
+var result = Math.round(3.5)  // Returns 3 (truncates towards zero)
+System.print(result)
+```
+
+---
+
+### trunc
+
+Truncates a number by removing its decimal part.
+
+```wren
+Math.trunc(x)
+```
+
+<ParamField path="x" type="number">
+  The number to truncate
+</ParamField>
+
+**Returns:** The integer part of x
+
+**Example:**
+
+```wren
+import "math" for Math
+
+var result = Math.trunc(3.9)  // Returns 3
+System.print(result)
+```
+
+## Comparison Functions
+
+### min
+
+Returns the smaller of two numbers.
+
+```wren
+Math.min(a, b)
+```
+
+<ParamField path="a" type="number">
+  First number
+</ParamField>
+
+<ParamField path="b" type="number">
+  Second number
+</ParamField>
+
+**Returns:** The smaller of the two numbers
+
+**Example:**
+
+```wren
+import "math" for Math
+
+var result = Math.min(5, 10)  // Returns 5
+System.print(result)
+```
+
+---
+
+### max
+
+Returns the larger of two numbers.
+
+```wren
+Math.max(a, b)
+```
+
+<ParamField path="a" type="number">
+  First number
+</ParamField>
+
+<ParamField path="b" type="number">
+  Second number
+</ParamField>
+
+**Returns:** The larger of the two numbers
+
+**Example:**
+
+```wren
+import "math" for Math
+
+var result = Math.max(5, 10)  // Returns 10
+System.print(result)
+```
+
+---
+
+### abs
+
+Returns the absolute value of a number.
+
+```wren
+Math.abs(x)
+```
+
+<ParamField path="x" type="number">
+  The number
+</ParamField>
+
+**Returns:** The absolute value of x
+
+**Example:**
+
+```wren
+import "math" for Math
+
+var result = Math.abs(-5)  // Returns 5
+System.print(result)
+```
+
+## Usage Example
+
+Here's a complete example demonstrating various Math functions:
+
+```wren
+import "math" for Math
+
+// Trigonometry
+var angle = Math.PI / 4
+System.print("sin(45°): %(Math.sin(angle))")
+System.print("cos(45°): %(Math.cos(angle))")
+
+// Power and roots
+var base = 2
+var exponent = 10
+System.print("2^10: %(Math.pow(base, exponent))")
+System.print("√16: %(Math.sqrt(16))")
+
+// Logarithms
+System.print("log2(1024): %(Math.log2(1024))")
+System.print("log10(100): %(Math.log10(100))")
+
+// Rounding
+var value = 3.7
+System.print("floor(3.7): %(Math.floor(value))")
+System.print("ceil(3.7): %(Math.ceil(value))")
+System.print("round(3.7): %(Math.round(value))")
+
+// Comparison
+System.print("min(5, 10): %(Math.min(5, 10))")
+System.print("max(5, 10): %(Math.max(5, 10))")
+System.print("abs(-42): %(Math.abs(-42))")
+```

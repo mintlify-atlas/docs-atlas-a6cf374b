@@ -1,0 +1,480 @@
+---
+title: "Window Functions"
+description: "Window creation, configuration, and management functions"
+---
+
+## Overview
+
+Window functions handle the creation, configuration, and management of the game window, including fullscreen mode, window state, and monitor information.
+
+## Window Lifecycle
+
+### initWindow
+
+Initializes window and OpenGL context.
+
+<ParamField path="width" type="Number" required>
+  Window width in pixels
+</ParamField>
+
+<ParamField path="height" type="Number" required>
+  Window height in pixels
+</ParamField>
+
+<ParamField path="title" type="String" required>
+  Window title
+</ParamField>
+
+```wren
+import "raylib" for Raylib, Color
+
+var screenWidth = 800
+var screenHeight = 450
+
+Raylib.initWindow(screenWidth, screenHeight, "My Game")
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+### closeWindow
+
+Closes window and unloads OpenGL context.
+
+```wren
+Raylib.closeWindow()
+```
+
+### windowShouldClose
+
+Checks if KEY_ESCAPE pressed or Close icon pressed.
+
+**Returns:** `Boolean` - True if window should close
+
+```wren
+import "builtin" for Build
+
+while (!Raylib.windowShouldClose() && !Build.shouldStop()) {
+  // Game loop
+}
+```
+
+## Window State
+
+### isWindowReady
+
+Checks if window has been initialized successfully.
+
+**Returns:** `Boolean` - True if window is ready
+
+```wren
+if (Raylib.isWindowReady()) {
+  System.print("Window initialized successfully")
+}
+```
+
+### isWindowFullscreen
+
+Checks if window is currently fullscreen.
+
+**Returns:** `Boolean` - True if fullscreen
+
+### isWindowHidden
+
+Checks if window is currently hidden.
+
+**Returns:** `Boolean` - True if hidden
+
+### isWindowMinimized
+
+Checks if window is currently minimized.
+
+**Returns:** `Boolean` - True if minimized
+
+### isWindowMaximized
+
+Checks if window is currently maximized.
+
+**Returns:** `Boolean` - True if maximized
+
+### isWindowFocused
+
+Checks if window is currently focused.
+
+**Returns:** `Boolean` - True if focused
+
+### isWindowResized
+
+Checks if window has been resized last frame.
+
+**Returns:** `Boolean` - True if resized
+
+## Window Configuration
+
+### toggleFullscreen
+
+Toggles window state: fullscreen/windowed.
+
+```wren
+if (Raylib.isKeyPressed(KeyCode.KEY_F11)) {
+  Raylib.toggleFullscreen()
+}
+```
+
+### toggleBorderlessWindowed
+
+Toggles window state: borderless windowed mode.
+
+```wren
+if (Raylib.isKeyPressed(KeyCode.KEY_F10)) {
+  Raylib.toggleBorderlessWindowed()
+}
+```
+
+### maximizeWindow
+
+Sets window state: maximized, if resizable.
+
+```wren
+Raylib.maximizeWindow()
+```
+
+### minimizeWindow
+
+Sets window state: minimized, if resizable.
+
+```wren
+Raylib.minimizeWindow()
+```
+
+### restoreWindow
+
+Sets window state: not minimized/maximized.
+
+```wren
+Raylib.restoreWindow()
+```
+
+### setWindowTitle
+
+Sets title for window.
+
+<ParamField path="title" type="String" required>
+  New window title
+</ParamField>
+
+```wren
+var fps = Raylib.getFPS()
+Raylib.setWindowTitle("My Game - FPS: %(fps)")
+```
+
+### setWindowPosition
+
+Sets window position on screen.
+
+<ParamField path="x" type="Number" required>
+  X position in pixels
+</ParamField>
+
+<ParamField path="y" type="Number" required>
+  Y position in pixels
+</ParamField>
+
+```wren
+Raylib.setWindowPosition(100, 100)
+```
+
+### setWindowMinSize
+
+Sets window minimum dimensions (for FLAG_WINDOW_RESIZABLE).
+
+<ParamField path="width" type="Number" required>
+  Minimum width
+</ParamField>
+
+<ParamField path="height" type="Number" required>
+  Minimum height
+</ParamField>
+
+```wren
+Raylib.setWindowMinSize(640, 480)
+```
+
+### setWindowMaxSize
+
+Sets window maximum dimensions (for FLAG_WINDOW_RESIZABLE).
+
+<ParamField path="width" type="Number" required>
+  Maximum width
+</ParamField>
+
+<ParamField path="height" type="Number" required>
+  Maximum height
+</ParamField>
+
+```wren
+Raylib.setWindowMaxSize(1920, 1080)
+```
+
+### setWindowSize
+
+Sets window dimensions.
+
+<ParamField path="width" type="Number" required>
+  New width
+</ParamField>
+
+<ParamField path="height" type="Number" required>
+  New height
+</ParamField>
+
+```wren
+Raylib.setWindowSize(1280, 720)
+```
+
+### setWindowOpacity
+
+Sets window opacity (0.0f-1.0f).
+
+<ParamField path="opacity" type="Number" required>
+  Opacity value from 0.0 (transparent) to 1.0 (opaque)
+</ParamField>
+
+```wren
+Raylib.setWindowOpacity(0.8)  // 80% opacity
+```
+
+### setWindowFocused
+
+Sets window focused.
+
+```wren
+Raylib.setWindowFocused()
+```
+
+## Screen Information
+
+### getScreenWidth
+
+Returns current screen width.
+
+**Returns:** `Number` - Screen width in pixels
+
+```wren
+var screenWidth = Raylib.getScreenWidth()
+var centerX = screenWidth / 2
+```
+
+### getScreenHeight
+
+Returns current screen height.
+
+**Returns:** `Number` - Screen height in pixels
+
+```wren
+var screenHeight = Raylib.getScreenHeight()
+var centerY = screenHeight / 2
+```
+
+### getRenderWidth
+
+Returns current render width (it considers HiDPI).
+
+**Returns:** `Number` - Render width
+
+### getRenderHeight
+
+Returns current render height (it considers HiDPI).
+
+**Returns:** `Number` - Render height
+
+### getWindowPosition
+
+Returns window position on screen.
+
+**Returns:** `Vector2` - Window position
+
+```wren
+var pos = Raylib.getWindowPosition()
+System.print("Window at (%(pos.x), %(pos.y))")
+```
+
+### getWindowScaleDPI
+
+Returns window scale DPI factor.
+
+**Returns:** `Vector2` - DPI scale factor
+
+## Monitor Functions
+
+### getMonitorCount
+
+Returns number of connected monitors.
+
+**Returns:** `Number` - Monitor count
+
+```wren
+var monitorCount = Raylib.getMonitorCount()
+System.print("%(monitorCount) monitors connected")
+```
+
+### getCurrentMonitor
+
+Returns current monitor where window is placed.
+
+**Returns:** `Number` - Monitor index
+
+### getMonitorWidth
+
+Returns specified monitor width in pixels.
+
+<ParamField path="monitor" type="Number" required>
+  Monitor index
+</ParamField>
+
+**Returns:** `Number` - Monitor width
+
+```wren
+var monitor = Raylib.getCurrentMonitor()
+var width = Raylib.getMonitorWidth(monitor)
+var height = Raylib.getMonitorHeight(monitor)
+System.print("Monitor resolution: %(width)x%(height)")
+```
+
+### getMonitorHeight
+
+Returns specified monitor height in pixels.
+
+<ParamField path="monitor" type="Number" required>
+  Monitor index
+</ParamField>
+
+**Returns:** `Number` - Monitor height
+
+### getMonitorPhysicalWidth
+
+Returns specified monitor physical width in millimeters.
+
+<ParamField path="monitor" type="Number" required>
+  Monitor index
+</ParamField>
+
+**Returns:** `Number` - Physical width in mm
+
+### getMonitorPhysicalHeight
+
+Returns specified monitor physical height in millimeters.
+
+<ParamField path="monitor" type="Number" required>
+  Monitor index
+</ParamField>
+
+**Returns:** `Number` - Physical height in mm
+
+### getMonitorRefreshRate
+
+Returns specified monitor refresh rate.
+
+<ParamField path="monitor" type="Number" required>
+  Monitor index
+</ParamField>
+
+**Returns:** `Number` - Refresh rate in Hz
+
+### getMonitorName
+
+Returns specified monitor name.
+
+<ParamField path="monitor" type="Number" required>
+  Monitor index
+</ParamField>
+
+**Returns:** `String` - Monitor name
+
+```wren
+var monitor = Raylib.getCurrentMonitor()
+var name = Raylib.getMonitorName(monitor)
+System.print("Current monitor: %(name)")
+```
+
+## Clipboard Functions
+
+### setClipboardText
+
+Sets clipboard text content.
+
+<ParamField path="text" type="String" required>
+  Text to copy to clipboard
+</ParamField>
+
+```wren
+Raylib.setClipboardText("Hello from Talon!")
+```
+
+### getClipboardText
+
+Returns clipboard text content.
+
+**Returns:** `String` - Clipboard text
+
+```wren
+var clipboardText = Raylib.getClipboardText()
+System.print("Clipboard: %(clipboardText)")
+```
+
+## Cursor Functions
+
+### showCursor
+
+Shows cursor.
+
+```wren
+Raylib.showCursor()
+```
+
+### hideCursor
+
+Hides cursor.
+
+```wren
+Raylib.hideCursor()
+```
+
+### isCursorHidden
+
+Checks if cursor is not visible.
+
+**Returns:** `Boolean` - True if cursor is hidden
+
+### enableCursor
+
+Enables cursor (unlock cursor).
+
+```wren
+Raylib.enableCursor()
+```
+
+### disableCursor
+
+Disables cursor (lock cursor).
+
+```wren
+// Useful for FPS games
+Raylib.disableCursor()
+```
+
+### isCursorOnScreen
+
+Checks if cursor is on the screen.
+
+**Returns:** `Boolean` - True if cursor is on screen
+
+<Note>
+  The window automatically sets `FLAG_WINDOW_TOPMOST` when initialized in Talon. This keeps your game window on top during development.
+</Note>

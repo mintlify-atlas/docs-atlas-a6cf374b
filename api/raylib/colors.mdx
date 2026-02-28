@@ -1,0 +1,456 @@
+---
+title: "Color Functions"
+description: "Color manipulation, conversion, and utility functions"
+---
+
+## Overview
+
+Color functions provide utilities for creating, manipulating, and converting colors. Raylib includes predefined color constants and functions for color operations.
+
+## Color Type
+
+Colors in Talon are represented by the `Color` class with RGBA components (0-255).
+
+```wren
+import "raylib" for Color
+
+// Create custom color
+var myColor = Color.new(255, 100, 50, 255)  // R, G, B, A
+
+// Use predefined colors
+var red = Color.Red
+var blue = Color.Blue
+var transparent = Color.new(255, 0, 0, 128)  // Semi-transparent red
+```
+
+## Predefined Colors
+
+Raylib provides many predefined color constants:
+
+```wren
+import "raylib" for Color, Raylib
+
+Raylib.initWindow(800, 450, "Colors")
+
+while (!Raylib.windowShouldClose()) {
+  Raylib.beginDrawing()
+  
+  // Basic colors
+  Raylib.clearBackground(Color.RayWhite)
+  Raylib.drawRectangle(10, 10, 100, 100, Color.Red)
+  Raylib.drawRectangle(120, 10, 100, 100, Color.Green)
+  Raylib.drawRectangle(230, 10, 100, 100, Color.Blue)
+  
+  // Grayscale
+  Raylib.drawRectangle(10, 120, 100, 100, Color.Black)
+  Raylib.drawRectangle(120, 120, 100, 100, Color.Gray)
+  Raylib.drawRectangle(230, 120, 100, 100, Color.White)
+  
+  // Extended colors
+  Raylib.drawRectangle(10, 230, 100, 100, Color.Maroon)
+  Raylib.drawRectangle(120, 230, 100, 100, Color.Purple)
+  Raylib.drawRectangle(230, 230, 100, 100, Color.SkyBlue)
+  
+  Raylib.endDrawing()
+}
+```
+
+### Available Color Constants
+
+- **Basic:** `White`, `Black`, `Red`, `Green`, `Blue`, `Yellow`, `Magenta`, `Cyan`
+- **Grayscale:** `LightGray`, `Gray`, `DarkGray`
+- **Extended:** `Orange`, `Pink`, `Lime`, `Brown`, `Beige`, `Purple`, `Violet`
+- **Named:** `SkyBlue`, `RayWhite`, `Gold`, `Maroon`, `DarkGreen`, `DarkBlue`, `DarkPurple`, `DarkBrown`
+
+## Color Manipulation
+
+### fade
+
+Returns color with alpha applied (fade).
+
+<ParamField path="color" type="Color" required>
+  Source color
+</ParamField>
+
+<ParamField path="alpha" type="Number" required>
+  Alpha value (0.0 to 1.0)
+</ParamField>
+
+**Returns:** `Color` - Color with applied alpha
+
+```wren
+import "raylib" for Raylib, Color
+
+var fadeValue = 0.0
+var fadeDirection = 1
+
+while (!Raylib.windowShouldClose()) {
+  // Animate fade
+  fadeValue = fadeValue + (0.01 * fadeDirection)
+  if (fadeValue >= 1.0) fadeDirection = -1
+  if (fadeValue <= 0.0) fadeDirection = 1
+  
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  // Draw fading rectangle
+  var fadedColor = Raylib.fade(Color.Red, fadeValue)
+  Raylib.drawRectangle(300, 175, 200, 100, fadedColor)
+  
+  Raylib.endDrawing()
+}
+```
+
+### colorAlpha
+
+Returns color with alpha value.
+
+<ParamField path="color" type="Color" required>
+  Source color
+</ParamField>
+
+<ParamField path="alpha" type="Number" required>
+  Alpha value (0.0 to 1.0)
+</ParamField>
+
+**Returns:** `Color` - Color with new alpha
+
+```wren
+var semiTransparent = Raylib.colorAlpha(Color.Blue, 0.5)
+Raylib.drawRectangle(100, 100, 200, 200, semiTransparent)
+```
+
+### colorTint
+
+Returns color tinted with another color.
+
+<ParamField path="color" type="Color" required>
+  Source color
+</ParamField>
+
+<ParamField path="tint" type="Color" required>
+  Tint color
+</ParamField>
+
+**Returns:** `Color` - Tinted color
+
+```wren
+var baseColor = Color.White
+var tinted = Raylib.colorTint(baseColor, Color.Red)
+Raylib.drawCircle(400, 225, 50, tinted)
+```
+
+### colorBrightness
+
+Returns color with brightness offset.
+
+<ParamField path="color" type="Color" required>
+  Source color
+</ParamField>
+
+<ParamField path="factor" type="Number" required>
+  Brightness factor (-1.0 to 1.0)
+</ParamField>
+
+**Returns:** `Color` - Adjusted color
+
+```wren
+// Make color brighter
+var brighter = Raylib.colorBrightness(Color.Blue, 0.3)
+
+// Make color darker
+var darker = Raylib.colorBrightness(Color.Blue, -0.3)
+
+Raylib.drawRectangle(100, 100, 100, 100, darker)
+Raylib.drawRectangle(250, 100, 100, 100, Color.Blue)
+Raylib.drawRectangle(400, 100, 100, 100, brighter)
+```
+
+### colorContrast
+
+Returns color with contrast correction.
+
+<ParamField path="color" type="Color" required>
+  Source color
+</ParamField>
+
+<ParamField path="contrast" type="Number" required>
+  Contrast value (-1.0 to 1.0)
+</ParamField>
+
+**Returns:** `Color` - Adjusted color
+
+```wren
+var highContrast = Raylib.colorContrast(Color.Gray, 0.5)
+Raylib.drawRectangle(100, 100, 200, 200, highContrast)
+```
+
+### colorLerp
+
+Returns color interpolation (linear) between two colors.
+
+<ParamField path="color1" type="Color" required>
+  Start color
+</ParamField>
+
+<ParamField path="color2" type="Color" required>
+  End color
+</ParamField>
+
+<ParamField path="factor" type="Number" required>
+  Interpolation factor (0.0 to 1.0)
+</ParamField>
+
+**Returns:** `Color` - Interpolated color
+
+```wren
+var t = 0.0
+var direction = 1
+
+while (!Raylib.windowShouldClose()) {
+  t = t + (0.01 * direction)
+  if (t >= 1.0) direction = -1
+  if (t <= 0.0) direction = 1
+  
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  // Animate color transition
+  var currentColor = Raylib.colorLerp(Color.Red, Color.Blue, t)
+  Raylib.drawRectangle(250, 150, 300, 150, currentColor)
+  
+  Raylib.endDrawing()
+}
+```
+
+### colorAlphaBlend
+
+Returns src alpha-blended into dst color with tint.
+
+<ParamField path="dst" type="Color" required>
+  Destination color
+</ParamField>
+
+<ParamField path="src" type="Color" required>
+  Source color
+</ParamField>
+
+<ParamField path="tint" type="Color" required>
+  Tint color
+</ParamField>
+
+**Returns:** `Color` - Blended color
+
+## Color Comparison
+
+### colorIsEqual
+
+Checks if two colors are equal.
+
+<ParamField path="col1" type="Color" required>
+  First color
+</ParamField>
+
+<ParamField path="col2" type="Color" required>
+  Second color
+</ParamField>
+
+**Returns:** `Boolean` - True if colors are equal
+
+```wren
+var color1 = Color.new(255, 0, 0, 255)
+var color2 = Color.Red
+
+if (Raylib.colorIsEqual(color1, color2)) {
+  System.print("Colors match!")
+}
+```
+
+## Color Conversion
+
+### colorToInt
+
+Converts color to hexadecimal value.
+
+<ParamField path="color" type="Color" required>
+  Color to convert
+</ParamField>
+
+**Returns:** `Number` - Hexadecimal color value
+
+```wren
+var colorValue = Raylib.colorToInt(Color.Red)
+System.print("Red as hex: %(colorValue)")
+```
+
+### getColor
+
+Returns a Color from a hexadecimal value.
+
+<ParamField path="hexValue" type="Number" required>
+  Hexadecimal color value
+</ParamField>
+
+**Returns:** `Color` - Color from hex
+
+```wren
+var color = Raylib.getColor(0xFF0000FF)  // Red
+Raylib.drawRectangle(100, 100, 200, 200, color)
+```
+
+### colorNormalize
+
+Returns color normalized as float [0..1].
+
+<ParamField path="color" type="Color" required>
+  Color to normalize
+</ParamField>
+
+**Returns:** `Vector4` - Normalized color (r, g, b, a)
+
+### colorFromNormalized
+
+Returns color from normalized values [0..1].
+
+<ParamField path="normalized" type="Vector4" required>
+  Normalized color values
+</ParamField>
+
+**Returns:** `Color` - Color
+
+## HSV Conversion
+
+### colorToHSV
+
+Converts color to HSV values.
+
+<ParamField path="color" type="Color" required>
+  Color to convert
+</ParamField>
+
+**Returns:** `Vector3` - HSV values (hue, saturation, value)
+
+```wren
+var hsv = Raylib.colorToHSV(Color.Red)
+System.print("Hue: %(hsv.x), Sat: %(hsv.y), Val: %(hsv.z)")
+```
+
+### colorFromHSV
+
+Returns a Color from HSV values.
+
+<ParamField path="hue" type="Number" required>
+  Hue (0.0 to 360.0)
+</ParamField>
+
+<ParamField path="saturation" type="Number" required>
+  Saturation (0.0 to 1.0)
+</ParamField>
+
+<ParamField path="value" type="Number" required>
+  Value (0.0 to 1.0)
+</ParamField>
+
+**Returns:** `Color` - Color from HSV
+
+```wren
+// Create rainbow colors
+var hue = 0.0
+
+while (!Raylib.windowShouldClose()) {
+  hue = (hue + 1) % 360
+  
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  var rainbowColor = Raylib.colorFromHSV(hue, 1.0, 1.0)
+  Raylib.drawRectangle(250, 150, 300, 150, rainbowColor)
+  
+  Raylib.endDrawing()
+}
+```
+
+## Complete Color Example
+
+```wren
+import "raylib" for Raylib, Color
+
+var screenWidth = 800
+var screenHeight = 450
+
+Raylib.initWindow(screenWidth, screenHeight, "Color Functions")
+Raylib.setTargetFPS(60)
+
+var hue = 0.0
+var fadeValue = 0.0
+var fadeDirection = 1
+
+while (!Raylib.windowShouldClose()) {
+  // Update animations
+  hue = (hue + 1) % 360
+  fadeValue = fadeValue + (0.01 * fadeDirection)
+  if (fadeValue >= 1.0) fadeDirection = -1
+  if (fadeValue <= 0.0) fadeDirection = 1
+  
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  // Rainbow gradient using HSV
+  var rainbowColor = Raylib.colorFromHSV(hue, 1.0, 1.0)
+  Raylib.drawRectangle(50, 50, 200, 100, rainbowColor)
+  Raylib.drawText("HSV Rainbow", 90, 70, 20, Color.White)
+  
+  // Fading color
+  var fadedColor = Raylib.fade(Color.Blue, fadeValue)
+  Raylib.drawRectangle(300, 50, 200, 100, fadedColor)
+  Raylib.drawText("Fading Blue", 340, 70, 20, Color.White)
+  
+  // Color interpolation
+  var lerpColor = Raylib.colorLerp(Color.Red, Color.Green, fadeValue)
+  Raylib.drawRectangle(550, 50, 200, 100, lerpColor)
+  Raylib.drawText("Red to Green", 570, 70, 20, Color.White)
+  
+  // Brightness variations
+  var darkBlue = Raylib.colorBrightness(Color.Blue, -0.5)
+  var normalBlue = Color.Blue
+  var brightBlue = Raylib.colorBrightness(Color.Blue, 0.5)
+  
+  Raylib.drawRectangle(50, 200, 150, 100, darkBlue)
+  Raylib.drawRectangle(225, 200, 150, 100, normalBlue)
+  Raylib.drawRectangle(400, 200, 150, 100, brightBlue)
+  
+  Raylib.drawText("Dark", 90, 240, 20, Color.White)
+  Raylib.drawText("Normal", 255, 240, 20, Color.White)
+  Raylib.drawText("Bright", 430, 240, 20, Color.White)
+  
+  // Semi-transparent overlay
+  var overlay = Raylib.colorAlpha(Color.Black, 0.3)
+  Raylib.drawRectangle(0, 350, screenWidth, 100, overlay)
+  Raylib.drawText("Semi-transparent overlay", 250, 380, 20, Color.White)
+  
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+## Best Practices
+
+<Tip>
+  Use predefined color constants (like `Color.Red`, `Color.Blue`) for better readability and consistency.
+</Tip>
+
+<Note>
+  The `fade()` function is useful for UI animations, fade-in/fade-out effects, and particle systems.
+</Note>
+
+<Tip>
+  Use HSV color space for creating rainbow effects, color pickers, or any UI that needs intuitive color manipulation:
+  ```wren
+  var rainbowColor = Raylib.colorFromHSV(hue, 1.0, 1.0)
+  ```
+</Tip>
+
+<Warning>
+  Color component values are 0-255 for RGB, but alpha values in functions like `fade()` use 0.0-1.0 range.
+</Warning>

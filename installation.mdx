@@ -1,0 +1,224 @@
+---
+title: "Installation"
+description: "Download and install Talon for your operating system"
+---
+
+## Prerequisites
+
+Before installing Talon, ensure you have the following:
+
+<AccordionGroup>
+  <Accordion icon="linux" title="Linux">
+    Most Linux distributions come with the necessary libraries. You may need to install:
+    
+    - X11 development libraries (for window management)
+    - Standard C/C++ development tools
+    
+    **Ubuntu/Debian:**
+    ```bash
+    sudo apt-get install libx11-dev
+    ```
+    
+    **Fedora/RHEL:**
+    ```bash
+    sudo dnf install libX11-devel
+    ```
+    
+    **Arch Linux:**
+    ```bash
+    sudo pacman -S libx11
+    ```
+  </Accordion>
+
+  <Accordion icon="windows" title="Windows">
+    No additional prerequisites required. Talon executables for Windows are self-contained.
+    
+    <Note>
+      If you plan to build from source, you'll need the Zig compiler and development tools.
+    </Note>
+  </Accordion>
+
+  <Accordion icon="globe" title="Web (WASM)">
+    To build for web, you'll need:
+    
+    - Docker (for Emscripten builds)
+    - A modern web browser for testing
+  </Accordion>
+</AccordionGroup>
+
+## Download Talon
+
+<Steps>
+  <Step title="Visit the Releases Page">
+    Go to the [Talon Releases page](https://github.com/jossephus/talon/releases) on GitHub.
+  </Step>
+  
+  <Step title="Choose Your Platform">
+    Download the appropriate release for your operating system:
+    
+    - **Linux**: `talon-linux-x64` or `talon-linux-arm64`
+    - **Windows**: `talon-windows-x64.exe`
+    
+    <Tip>
+      Always download the latest stable release for the best experience and latest features.
+    </Tip>
+  </Step>
+  
+  <Step title="Make It Executable (Linux only)">
+    After downloading, make the Talon binary executable:
+    
+    ```bash
+    chmod +x talon-linux-x64
+    ```
+  </Step>
+  
+  <Step title="Add to PATH (Optional)">
+    For easier access, add Talon to your system PATH:
+    
+    **Linux/macOS:**
+    ```bash
+    # Move to a directory in your PATH
+    sudo mv talon-linux-x64 /usr/local/bin/talon
+    
+    # Or add to ~/.bashrc or ~/.zshrc
+    export PATH="$PATH:/path/to/talon"
+    ```
+    
+    **Windows:**
+    1. Right-click on **This PC** and select **Properties**
+    2. Click **Advanced system settings**
+    3. Click **Environment Variables**
+    4. Under **System variables**, find **Path** and click **Edit**
+    5. Add the directory containing `talon.exe`
+  </Step>
+</Steps>
+
+## Verify Installation
+
+Verify that Talon is installed correctly:
+
+```bash
+talon --version
+```
+
+You should see version information displayed.
+
+<Warning>
+  If you get a "command not found" error, ensure that:
+  - The Talon binary is executable (Linux)
+  - The directory containing Talon is in your PATH
+  - You've opened a new terminal window after modifying PATH
+</Warning>
+
+## Building from Source
+
+If you prefer to build Talon from source, you'll need:
+
+<CardGroup cols={2}>
+  <Card title="Zig Compiler" icon="hammer">
+    Talon is built with Zig. Download from [ziglang.org](https://ziglang.org/download/).
+  </Card>
+  <Card title="Git" icon="git">
+    Clone the repository with Git.
+  </Card>
+</CardGroup>
+
+### Build Steps
+
+<Steps>
+  <Step title="Clone the Repository">
+    ```bash
+    git clone https://github.com/jossephus/talon.git
+    cd talon
+    ```
+  </Step>
+  
+  <Step title="Build with Zig">
+    ```bash
+    zig build
+    ```
+    
+    The compiled binary will be in `zig-out/bin/talon`.
+  </Step>
+  
+  <Step title="Run Talon">
+    ```bash
+    ./zig-out/bin/talon
+    ```
+  </Step>
+</Steps>
+
+<Note>
+  For development builds with debug symbols, use:
+  ```bash
+  zig build -Doptimize=Debug
+  ```
+</Note>
+
+## Docker Setup (For Building Executables)
+
+If you plan to build distributable executables or WASM builds, install Docker:
+
+<Tabs>
+  <Tab title="Linux">
+    Follow the [Docker installation guide for Linux](https://docs.docker.com/engine/install/).
+    
+    After installation, add your user to the docker group:
+    ```bash
+    sudo usermod -aG docker $USER
+    ```
+    
+    Log out and back in for the changes to take effect.
+  </Tab>
+  
+  <Tab title="Windows">
+    Download and install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop).
+  </Tab>
+  
+  <Tab title="macOS">
+    Download and install [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop).
+  </Tab>
+</Tabs>
+
+## Next Steps
+
+Now that Talon is installed, you're ready to create your first game!
+
+<Card
+  title="Quickstart Guide"
+  icon="rocket"
+  href="/quickstart"
+>
+  Follow our quickstart guide to create a simple game in minutes.
+</Card>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion icon="circle-exclamation" title="Linux: Missing library errors">
+    If you get errors about missing `.so` files, install the required development libraries:
+    
+    ```bash
+    # Ubuntu/Debian
+    sudo apt-get install libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+    
+    # Fedora
+    sudo dnf install libX11-devel libXrandr-devel libXinerama-devel libXcursor-devel libXi-devel
+    ```
+  </Accordion>
+  
+  <Accordion icon="circle-exclamation" title="Windows: Antivirus blocking executable">
+    Some antivirus software may flag the Talon executable. Add an exception for Talon in your antivirus settings if this occurs.
+  </Accordion>
+  
+  <Accordion icon="circle-exclamation" title="Permission denied errors">
+    On Linux, ensure the binary has execute permissions:
+    ```bash
+    chmod +x talon
+    ```
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+  **Need more help?** Visit the [GitHub Issues](https://github.com/jossephus/talon/issues) page to report problems or ask questions.
+</Note>

@@ -1,0 +1,364 @@
+---
+title: Handling Input
+description: Learn how to capture keyboard and mouse input in your Talon games
+---
+
+Input handling is essential for creating interactive games. Talon provides comprehensive keyboard, mouse, and gamepad input through Raylib bindings.
+
+## Keyboard Input
+
+Talon provides two main functions for keyboard input:
+
+### `isKeyDown()` - Continuous Input
+
+Detects if a key is currently being held down. Perfect for continuous movement:
+
+```wren
+import "raylib" for Raylib, KeyCode
+
+if (Raylib.isKeyDown(KeyCode.KEY_RIGHT)) {
+  player.x = player.x + 2
+} else if (Raylib.isKeyDown(KeyCode.KEY_LEFT)) {
+  player.x = player.x - 2
+}
+```
+
+<Tip>
+  Use `isKeyDown()` for actions that should repeat while the key is held, like player movement.
+</Tip>
+
+### `isKeyPressed()` - Single Press Detection
+
+Detects when a key is first pressed (single trigger). Perfect for actions that should only happen once:
+
+```wren
+if (Raylib.isKeyPressed(KeyCode.KEY_SPACE)) {
+  // Jump or shoot - triggers once per press
+  player.jump()
+}
+
+if (Raylib.isKeyPressed(KeyCode.KEY_ENTER)) {
+  currentScreen = GameScreen.GamePlay
+}
+```
+
+<Note>
+  `isKeyPressed()` only returns true on the frame when the key is first pressed, not while it's held down.
+</Note>
+
+## Common KeyCodes
+
+Here are the most commonly used key codes:
+
+```wren
+KeyCode.KEY_SPACE
+KeyCode.KEY_ENTER
+KeyCode.KEY_ESCAPE
+
+// Arrow keys
+KeyCode.KEY_UP
+KeyCode.KEY_DOWN
+KeyCode.KEY_LEFT
+KeyCode.KEY_RIGHT
+
+// Letter keys
+KeyCode.KEY_A
+KeyCode.KEY_D
+KeyCode.KEY_S
+KeyCode.KEY_W
+
+// Number keys
+KeyCode.KEY_ZERO through KeyCode.KEY_NINE
+```
+
+## Real-World Example: Asteroid Game Controls
+
+The asteroid game demonstrates both types of input handling:
+
+<Steps>
+  <Step title="Player rotation with continuous input">
+    ```wren
+    update() {
+      if (!_gameOver) {
+        // Rotation with arrow keys
+        if (Raylib.isKeyDown(KeyCode.KEY_LEFT)) {
+          _player.rotation = _player.rotation - 5
+        }
+        if (Raylib.isKeyDown(KeyCode.KEY_RIGHT)) {
+          _player.rotation = _player.rotation + 5
+        }
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Movement acceleration">
+    ```wren
+    // Calculate speed based on rotation
+    _player.speed.x = Math.sin(_player.rotation * DEG2RAD) * PLAYER_SPEED
+    _player.speed.y = Math.cos(_player.rotation * DEG2RAD) * PLAYER_SPEED
+
+    // Apply thrust with UP key
+    if (Raylib.isKeyDown(KeyCode.KEY_UP)) {
+      if (_player.acceleration < 1) {
+        _player.acceleration = _player.acceleration + 0.04
+      }
+    } else {
+      // Decelerate when key is released
+      if (_player.acceleration > 0) {
+        _player.acceleration = _player.acceleration - 0.02
+      } else if (_player.acceleration < 0) {
+        _player.acceleration = 0
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Apply movement to position">
+    ```wren
+    // Update position based on speed and acceleration
+    _player.position.x = _player.position.x + (_player.speed.x * _player.acceleration)
+    _player.position.y = _player.position.y - (_player.speed.y * _player.acceleration)
+    ```
+  </Step>
+
+  <Step title="Game state changes with single press">
+    ```wren
+    if (Raylib.isKeyPressed(KeyCode.KEY_P)) {
+      _pause = !_pause  // Toggle pause
+    }
+
+    if (_gameOver && Raylib.isKeyDown(KeyCode.KEY_ENTER)) {
+      initGame()  // Restart game
+    }
+    ```
+  </Step>
+</Steps>
+
+## Mouse Input
+
+Talon provides comprehensive mouse input functions:
+
+### Mouse Position
+
+```wren
+var mouseX = Raylib.getMouseX()
+var mouseY = Raylib.getMouseY()
+
+// Or get position as Vector2
+var mousePos = Raylib.getMousePosition()
+```
+
+### Mouse Buttons
+
+```wren
+import "raylib" for MouseButton
+
+// Check if button is pressed (continuous)
+if (Raylib.isMouseButtonDown(MouseButton.MOUSE_LEFT_BUTTON)) {
+  // Left mouse button is held down
+}
+
+// Check if button was just clicked (single)
+if (Raylib.isMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON)) {
+  // Left mouse button was just clicked
+}
+
+// Check if button was released
+if (Raylib.isMouseButtonReleased(MouseButton.MOUSE_LEFT_BUTTON)) {
+  // Left mouse button was just released
+}
+```
+
+### Mouse Wheel
+
+The camera example demonstrates mouse wheel usage for zooming:
+
+```wren
+import "raylib" for Raylib
+import "math" for Math
+
+// Get mouse wheel movement
+var wheelMove = Raylib.getMouseWheelMove()
+
+// Apply zoom with exponential scaling
+camera.zoom = Math.exp(Math.log(camera.zoom) + (wheelMove * 0.1))
+
+// Clamp zoom levels
+if (camera.zoom > 3.0) {
+  camera.zoom = 3.0
+} else if (camera.zoom < 0.1) {
+  camera.zoom = 0.1
+}
+```
+
+## Complete Input Example
+
+<CodeGroup>
+```wren Player Movement
+import "raylib" for Raylib, Rectangle, Color, KeyCode
+
+var screenWidth = 800
+var screenHeight = 450
+
+Raylib.initWindow(screenWidth, screenHeight, "Input Example")
+
+var player = Rectangle.new(400, 280, 40, 40)
+var speed = 5
+
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+  // Handle continuous movement
+  if (Raylib.isKeyDown(KeyCode.KEY_RIGHT) || Raylib.isKeyDown(KeyCode.KEY_D)) {
+    player.x = player.x + speed
+  }
+  if (Raylib.isKeyDown(KeyCode.KEY_LEFT) || Raylib.isKeyDown(KeyCode.KEY_A)) {
+    player.x = player.x - speed
+  }
+  if (Raylib.isKeyDown(KeyCode.KEY_UP) || Raylib.isKeyDown(KeyCode.KEY_W)) {
+    player.y = player.y - speed
+  }
+  if (Raylib.isKeyDown(KeyCode.KEY_DOWN) || Raylib.isKeyDown(KeyCode.KEY_S)) {
+    player.y = player.y + speed
+  }
+
+  // Draw
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+
+  Raylib.drawRectangleRec(player, Color.Red)
+  Raylib.drawText("Use Arrow Keys or WASD to move", 10, 10, 20, Color.Black)
+
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+```wren Mouse Click
+import "raylib" for Raylib, Color, MouseButton, Vector2
+
+var screenWidth = 800
+var screenHeight = 450
+
+Raylib.initWindow(screenWidth, screenHeight, "Mouse Example")
+
+var circles = []
+
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+  // Create circle on click
+  if (Raylib.isMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON)) {
+    var pos = Raylib.getMousePosition()
+    circles.add(pos)
+  }
+
+  // Draw
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+
+  for (pos in circles) {
+    Raylib.drawCircleV(pos, 20, Color.Blue)
+  }
+
+  var mousePos = Raylib.getMousePosition()
+  Raylib.drawText("Click to place circles", 10, 10, 20, Color.Black)
+  Raylib.drawText("Mouse: %(mousePos.x), %(mousePos.y)", 10, 40, 20, Color.Gray)
+
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+```wren Combined Input
+import "raylib" for Raylib, Rectangle, Color, KeyCode, MouseButton
+
+var screenWidth = 800
+var screenHeight = 450
+
+Raylib.initWindow(screenWidth, screenHeight, "Combined Input")
+
+var player = Rectangle.new(400, 225, 40, 40)
+var speed = 5
+var canDash = true
+
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+  // Movement with keys
+  if (Raylib.isKeyDown(KeyCode.KEY_RIGHT)) { player.x = player.x + speed }
+  if (Raylib.isKeyDown(KeyCode.KEY_LEFT)) { player.x = player.x - speed }
+  if (Raylib.isKeyDown(KeyCode.KEY_UP)) { player.y = player.y - speed }
+  if (Raylib.isKeyDown(KeyCode.KEY_DOWN)) { player.y = player.y + speed }
+
+  // Dash to mouse position on click
+  if (Raylib.isMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON) && canDash) {
+    var mousePos = Raylib.getMousePosition()
+    player.x = mousePos.x - player.width / 2
+    player.y = mousePos.y - player.height / 2
+    canDash = false
+  }
+
+  // Recharge dash with space
+  if (Raylib.isKeyPressed(KeyCode.KEY_SPACE)) {
+    canDash = true
+  }
+
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+
+  Raylib.drawRectangleRec(player, canDash ? Color.Blue : Color.Gray)
+  Raylib.drawText("Arrow keys to move", 10, 10, 20, Color.Black)
+  Raylib.drawText("Click to dash", 10, 35, 20, Color.Black)
+  Raylib.drawText("Space to recharge", 10, 60, 20, Color.Black)
+
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+</CodeGroup>
+
+## Additional Input Functions
+
+### Other Keyboard Functions
+
+```wren
+// Check if key is released
+Raylib.isKeyReleased(KeyCode.KEY_SPACE)
+
+// Check if key is up (not pressed)
+Raylib.isKeyUp(KeyCode.KEY_SPACE)
+
+// Get the last key pressed
+var key = Raylib.getKeyPressed()
+
+// Get character pressed (for text input)
+var char = Raylib.getCharPressed()
+```
+
+### Mouse Delta
+
+```wren
+// Get mouse movement since last frame
+var mouseDelta = Raylib.getMouseDelta()
+```
+
+## Best Practices
+
+<Note>
+  **Input Handling Tips:**
+  - Use `isKeyDown()` for continuous actions (movement, shooting)
+  - Use `isKeyPressed()` for single actions (jumping, menu selection)
+  - Always multiply movement by delta time for frame-rate independent movement
+  - Consider adding input buffering for responsive controls
+</Note>
+
+## Next Steps
+
+- [Add collision detection](/guides/collision-detection) to prevent movement through walls
+- [Implement a camera](/guides/2d-camera) that follows player movement
+- [Organize your code](/guides/using-modules) into separate input handling modules

@@ -1,80 +1,368 @@
 ---
 title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+description: "Create your first Talon game in minutes with this step-by-step guide"
 ---
 
-## Get started in three steps
+## Prerequisites
 
-Get your documentation site running locally and make your first customization.
+Before you begin, make sure you have:
 
-### Step 1: Set up your local environment
+- Talon installed on your system ([Installation Guide](/installation))
+- A text editor or IDE of your choice
+- Basic familiarity with programming concepts
+
+<Tip>
+  New to Wren? Check out the [Wren documentation](https://wren.io) - you can learn the basics in under 30 minutes!
+</Tip>
+
+## Create Your First Game
+
+Let's create a simple "Hello World" window with Talon. This will introduce you to the core concepts of Talon game development.
+
+<Steps>
+  <Step title="Create a Project Directory">
+    Create a new directory for your game and navigate into it:
+    
+    ```bash
+    mkdir my-first-game
+    cd my-first-game
+    ```
+  </Step>
+  
+  <Step title="Create Your Main Script">
+    Create a file called `index.wren` and open it in your text editor:
+    
+    ```bash
+    touch index.wren
+    ```
+  </Step>
+  
+  <Step title="Write Your Game Code">
+    Add the following code to `index.wren`:
+    
+    ```wren index.wren
+    import "raylib" for Color, Raylib, Rectangle, Vector2, Camera2D, KeyCode, Texture2D
+    
+    var width = 800
+    var height = 450
+    var title = "Sample"
+    
+    Raylib.initWindow(width, height, title)
+    Raylib.setTargetFPS(60)
+    
+    var camera = Camera2D.new(
+       Vector2.new(2.0, 0.0),
+       Vector2.new(0.0, 0.0),
+       0.0,
+       1.0
+    )
+    
+    var target = Raylib.loadRenderTexture(width, height)
+    
+    while (!Raylib.windowShouldClose()) {
+      Raylib.beginDrawing()
+    
+      Raylib.clearBackground(Color.Red)
+    
+      Raylib.drawText("Congrats! You created your first window!", 190, 200, 20, Color.Green)
+    
+      Raylib.getScreenWidth()
+      Raylib.getScreenHeight()
+    
+      if (Raylib.isKeyDown(KeyCode.KEY_SPACE)) {
+          System.print("Space is Pressed")
+      }
+    
+      Raylib.drawTexturePro(target.texture,
+        Rectangle.new(0.0, 0.0, target.texture.width, target.texture.height),
+        Rectangle.new(0.0, 0.0, target.texture.width, target.texture.height),
+        Vector2.new(0.0, 0.0),
+        0.0,
+        Color.new(255, 255, 255, 255 )
+      )
+    
+      Raylib.endDrawing()
+    }
+    
+    Raylib.clearBackground(Color.Gray)
+    Raylib.unloadRenderTexture(target)
+    Raylib.closeWindow()
+    ```
+  </Step>
+  
+  <Step title="Run Your Game">
+    Execute your game with Talon:
+    
+    ```bash
+    talon index.wren
+    ```
+    
+    You should see a window with a red background and green text!
+  </Step>
+</Steps>
+
+## Understanding the Code
+
+Let's break down what each part of the code does:
 
 <AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
+  <Accordion icon="file-import" title="Imports">
+    ```wren
+    import "raylib" for Color, Raylib, Rectangle, Vector2, Camera2D, KeyCode, Texture2D
+    ```
     
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
+    This imports the Raylib module and specific classes you'll use. The `raylib` module provides access to all Raylib functionality.
   </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
+  
+  <Accordion icon="window-maximize" title="Window Initialization">
+    ```wren
+    var width = 800
+    var height = 450
+    var title = "Sample"
     
-    <Tip>Your preview updates automatically as you edit files.</Tip>
+    Raylib.initWindow(width, height, title)
+    Raylib.setTargetFPS(60)
+    ```
+    
+    This creates a window with the specified dimensions and title, then sets the target frame rate to 60 FPS.
+  </Accordion>
+  
+  <Accordion icon="camera" title="Camera Setup">
+    ```wren
+    var camera = Camera2D.new(
+       Vector2.new(2.0, 0.0),  // offset
+       Vector2.new(0.0, 0.0),  // target
+       0.0,                     // rotation
+       1.0                      // zoom
+    )
+    ```
+    
+    Creates a 2D camera for more advanced rendering. The camera allows you to control viewport, zoom, and rotation.
+  </Accordion>
+  
+  <Accordion icon="repeat" title="Game Loop">
+    ```wren
+    while (!Raylib.windowShouldClose()) {
+      Raylib.beginDrawing()
+      // ... drawing code ...
+      Raylib.endDrawing()
+    }
+    ```
+    
+    The main game loop runs until the user closes the window. All drawing must happen between `beginDrawing()` and `endDrawing()`.
+  </Accordion>
+  
+  <Accordion icon="keyboard" title="Input Handling">
+    ```wren
+    if (Raylib.isKeyDown(KeyCode.KEY_SPACE)) {
+        System.print("Space is Pressed")
+    }
+    ```
+    
+    Checks if the spacebar is pressed and prints a message to the console.
+  </Accordion>
+  
+  <Accordion icon="broom" title="Cleanup">
+    ```wren
+    Raylib.clearBackground(Color.Gray)
+    Raylib.unloadRenderTexture(target)
+    Raylib.closeWindow()
+    ```
+    
+    Always clean up resources and close the window when your game exits.
   </Accordion>
 </AccordionGroup>
 
-### Step 2: Deploy your changes
+## Try Hot Reload
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
+One of Talon's best features is hot reload. Let's try it!
+
+<Steps>
+  <Step title="Run with Hot Reload">
+    Start your game with the `--hot` flag:
     
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    ```bash
+    talon --hot index.wren
+    ```
+  </Step>
+  
+  <Step title="Make a Change">
+    While the game is running, edit `index.wren` and change the background color:
+    
+    ```wren
+    Raylib.clearBackground(Color.Blue)  // Changed from Color.Red
+    ```
+  </Step>
+  
+  <Step title="See Instant Updates">
+    Save the file and watch your game automatically reload with the new background color!
+    
+    <Tip>
+      Hot reload is perfect for tweaking colors, positions, and game parameters without restarting.
+    </Tip>
+  </Step>
+</Steps>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+## Next Steps
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
+Congratulations! You've created your first Talon game. Here's what to explore next:
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card
+    title="Learn Wren"
+    icon="book-open"
+    href="https://wren.io"
+  >
+    Master the Wren language to unlock Talon's full potential.
+  </Card>
+  
+  <Card
+    title="Core Concepts"
+    icon="lightbulb"
+    href="/concepts/game-loop"
+  >
+    Understand the game loop, project structure, and more.
+  </Card>
+  
+  <Card
+    title="Explore Examples"
+    icon="gamepad"
+    href="/examples/basic-window"
+  >
+    Study complete game examples like Breakout and Asteroids.
+  </Card>
+  
+  <Card
+    title="API Reference"
+    icon="code"
+    href="/api/raylib/core"
+  >
+    Explore all available Raylib functions and data types.
+  </Card>
 </CardGroup>
 
+## Build a Simple Interactive Game
+
+Ready for something more interactive? Here's a simple example with movement:
+
+```wren simple-movement.wren
+import "raylib" for Color, Raylib, KeyCode
+
+var screenWidth = 800
+var screenHeight = 450
+
+Raylib.initWindow(screenWidth, screenHeight, "Simple Movement")
+Raylib.setTargetFPS(60)
+
+// Player position
+var playerX = 400
+var playerY = 225
+var playerSpeed = 5
+
+while (!Raylib.windowShouldClose()) {
+  // Update: Handle input
+  if (Raylib.isKeyDown(KeyCode.KEY_RIGHT)) playerX = playerX + playerSpeed
+  if (Raylib.isKeyDown(KeyCode.KEY_LEFT)) playerX = playerX - playerSpeed
+  if (Raylib.isKeyDown(KeyCode.KEY_DOWN)) playerY = playerY + playerSpeed
+  if (Raylib.isKeyDown(KeyCode.KEY_UP)) playerY = playerY - playerSpeed
+  
+  // Draw
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  // Draw player as a circle
+  Raylib.drawCircle(playerX, playerY, 20, Color.Blue)
+  
+  Raylib.drawText("Use arrow keys to move", 10, 10, 20, Color.DarkGray)
+  
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+Save this as `movement.wren` and run it:
+
+```bash
+talon movement.wren
+```
+
+Use the arrow keys to move the blue circle around!
+
+## Common Patterns
+
+Here are some common patterns you'll use in Talon games:
+
+### Update-Draw Cycle
+
+```wren
+while (!Raylib.windowShouldClose()) {
+  // 1. Update game state
+  // Handle input, update positions, check collisions, etc.
+  
+  // 2. Draw
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  // Draw your game objects here
+  
+  Raylib.endDrawing()
+}
+```
+
+### Working with Colors
+
+```wren
+// Use built-in colors
+Color.Red
+Color.Green
+Color.Blue
+
+// Create custom colors (R, G, B, Alpha)
+var customColor = Color.new(255, 128, 0, 255)
+```
+
+### Input Handling
+
+```wren
+// Keyboard
+if (Raylib.isKeyPressed(KeyCode.KEY_SPACE)) { /* one-time press */ }
+if (Raylib.isKeyDown(KeyCode.KEY_SPACE)) { /* held down */ }
+
+// Mouse
+var mouseX = Raylib.getMouseX()
+var mouseY = Raylib.getMouseY()
+if (Raylib.isMouseButtonPressed(0)) { /* left click */ }
+```
+
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+  **Tip**: The difference between `isKeyPressed()` and `isKeyDown()` is that `isKeyPressed()` triggers once per press, while `isKeyDown()` returns true every frame the key is held.
 </Note>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion icon="triangle-exclamation" title="Window doesn't appear">
+    Make sure you're calling `Raylib.initWindow()` before any other Raylib functions, and check that your screen dimensions are reasonable (not too large or negative).
+  </Accordion>
+  
+  <Accordion icon="triangle-exclamation" title="Game runs too fast or too slow">
+    Use `Raylib.setTargetFPS(60)` to set a consistent frame rate. The default may vary by system.
+  </Accordion>
+  
+  <Accordion icon="triangle-exclamation" title="Import errors">
+    Make sure you're importing the correct module name (`"raylib"`) and that you're importing the classes you need (like `Color`, `Raylib`, etc.).
+  </Accordion>
+  
+  <Accordion icon="triangle-exclamation" title="Hot reload not working">
+    Ensure you're running with the `--hot` flag and saving your file. Note that some errors may prevent hot reload from working until the syntax is corrected.
+  </Accordion>
+</AccordionGroup>
+
+<Card
+  title="Need Help?"
+  icon="question"
+  href="https://github.com/jossephus/talon/issues"
+>
+  If you're stuck, check the GitHub issues or create a new issue for help.
+</Card>

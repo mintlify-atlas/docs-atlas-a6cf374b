@@ -1,0 +1,381 @@
+---
+title: 2D Camera Example
+description: Learn how to use Camera2D for smooth scrolling, zoom, rotation, and viewport management in Talon
+---
+
+This example demonstrates how to use Talon's Camera2D system to create smooth camera movement, zoom, rotation, and parallax effects. Perfect for side-scrolling games, exploration games, or any project that needs advanced viewport control.
+
+## Overview
+
+The camera example features:
+- 2D camera with target following
+- Smooth camera movement tracking player
+- Mouse wheel zoom controls
+- Camera rotation with keyboard
+- Procedurally generated buildings
+- Visual debugging aids (crosshair, bounds)
+
+## Complete Code
+
+```wren
+import "raylib" for Color, Raylib, Rectangle, Vector2, Camera2D, KeyCode, Texture2D
+import "math" for Math
+
+var MAX_BUILDINGS = 100
+
+var screenWidth = 800 
+var screenHeight = 450
+
+Raylib.initWindow(screenWidth, screenHeight, "raylib [core] example - 2d camera")
+
+var player = Rectangle.new(400, 280, 40, 40)
+var buildings = []
+var buildColors = []
+
+var spacing = 0
+var i = 0
+
+// Generate random buildings
+while (i < MAX_BUILDINGS) {
+  var height = Raylib.getRandomValue(100, 800)
+  var random = Raylib.getRandomValue(50, 200)
+  
+  var building = Rectangle.new(
+    -6000 + spacing, 
+    screenHeight - 130.0 - height,
+    random,
+    height
+  )
+
+  buildings.add(building)
+  spacing = spacing + building.width 
+
+  buildColors.add(Color.new(
+    Raylib.getRandomValue(200, 240),
+    Raylib.getRandomValue(200, 240),
+    Raylib.getRandomValue(200, 250),
+    255
+  ))
+
+  i = i + 1
+}
+
+// Create camera targeting player
+var camera = Camera2D.new(
+  Vector2.new(screenWidth / 2.0, screenHeight / 2.0),  // offset (viewport center)
+  Vector2.new(player.x + 20.0, player.y + 20.0),       // target (world position)
+  1.0,                                                   // zoom
+  0.0                                                    // rotation
+)
+
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+
+  // Player movement
+  if (Raylib.isKeyDown(KeyCode.KEY_RIGHT)) { 
+    player.x = player.x + 2 
+  } else if (Raylib.isKeyDown(KeyCode.KEY_LEFT)) { 
+    player.x = player.x - 2 
+  }
+
+  // Camera follows player
+  camera.target = Vector2.new(player.x + 20, player.y + 20)
+
+  // Camera rotation
+  if (Raylib.isKeyDown(KeyCode.KEY_A)) { 
+    camera.rotation = camera.rotation - 1 
+  } else if (Raylib.isKeyDown(KeyCode.KEY_S)) { 
+    camera.rotation = camera.rotation + 1 
+  }
+
+  // Clamp rotation
+  if (camera.rotation > 40) {
+    camera.rotation = 40
+  } else if (camera.rotation < -40) { 
+    camera.rotation = -40 
+  }
+
+  // Zoom with mouse wheel
+  camera.zoom = Math.exp(Math.log(camera.zoom) + (Raylib.getMouseWheelMove() * 0.1))
+
+  if (camera.zoom > 3.0) { 
+    camera.zoom = 3.0 
+  } else if (camera.zoom < 0.1) { 
+    camera.zoom = 0.1 
+  }
+
+  // Reset camera
+  if (Raylib.isKeyDown(KeyCode.KEY_R)) {
+    camera.zoom = 1.0
+    camera.rotation = 0.0
+  }
+
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+
+  // Begin 2D camera mode
+  Raylib.beginMode2D(camera)
+
+  // Draw world space objects
+  Raylib.drawRectangle(-6000, 320, 13000, 8000, Color.DarkGray)
+
+  var i = 0
+  while (i < MAX_BUILDINGS) {
+    Raylib.drawRectangleRec(buildings[i], buildColors[i])
+    i = i + 1
+  }
+
+  Raylib.drawRectangleRec(player, Color.Red)
+
+  // Draw crosshair at camera target
+  Raylib.drawLine(
+    camera.target.x, -screenHeight*10, 
+    camera.target.x, screenHeight*10, 
+    Color.Green
+  )
+  Raylib.drawLine(
+    -screenWidth*10, camera.target.y, 
+    screenWidth*10, camera.target.y, 
+    Color.Green
+  )
+
+  Raylib.endMode2D()
+
+  // Draw UI in screen space
+  Raylib.drawText("SCREEN AREA", 640, 10, 20, Color.Red)
+
+  // Screen border
+  Raylib.drawRectangle(0, 0, screenWidth, 5, Color.Red)
+  Raylib.drawRectangle(0, 5, 5, screenHeight - 10, Color.Red)
+  Raylib.drawRectangle(screenWidth - 5, 5, 5, screenHeight - 10, Color.Red)
+  Raylib.drawRectangle(0, screenHeight - 5, screenWidth, 5, Color.Red)
+
+  // Controls panel
+  Raylib.drawRectangle(10, 10, 250, 113, Color.SkyBlue)
+  Raylib.drawRectangleLines(10, 10, 250, 113, Color.Blue)
+
+  Raylib.drawText("Free 2d camera controls:", 20, 20, 10, Color.Black)
+  Raylib.drawText("- Right/Left to move Offset", 40, 40, 10, Color.DarkGray)
+  Raylib.drawText("- Mouse Wheel to Zoom in-out", 40, 60, 10, Color.DarkGray)
+  Raylib.drawText("- A / S to Rotate", 40, 80, 10, Color.DarkGray)
+  Raylib.drawText("- R to reset Zoom and Rotation", 40, 100, 10, Color.DarkGray)
+
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+## Code Walkthrough
+
+### 1. Camera Creation
+
+```wren
+var camera = Camera2D.new(
+  Vector2.new(screenWidth / 2.0, screenHeight / 2.0),  // offset
+  Vector2.new(player.x + 20.0, player.y + 20.0),       // target
+  1.0,                                                   // zoom
+  0.0                                                    // rotation
+)
+```
+
+The Camera2D has four properties:
+- **offset**: The viewport center in screen space (usually screen center)
+- **target**: The world position the camera looks at
+- **zoom**: Scale factor (1.0 = normal, 2.0 = 2x zoom in)
+- **rotation**: Rotation angle in degrees
+
+### 2. Camera Following
+
+```wren
+// Update player position
+if (Raylib.isKeyDown(KeyCode.KEY_RIGHT)) { 
+  player.x = player.x + 2 
+}
+
+// Camera automatically follows
+camera.target = Vector2.new(player.x + 20, player.y + 20)
+```
+
+Updating the camera's `target` property makes it follow the player. The offset (20, 20) centers the camera on the player sprite.
+
+### 3. Zoom Control
+
+```wren
+camera.zoom = Math.exp(Math.log(camera.zoom) + (Raylib.getMouseWheelMove() * 0.1))
+
+if (camera.zoom > 3.0) { 
+  camera.zoom = 3.0 
+} else if (camera.zoom < 0.1) { 
+  camera.zoom = 0.1 
+}
+```
+
+Exponential zoom provides smooth, natural-feeling zoom behavior. The mouse wheel movement is multiplied by a sensitivity factor (0.1) and applied logarithmically.
+
+### 4. Camera Rotation
+
+```wren
+if (Raylib.isKeyDown(KeyCode.KEY_A)) { 
+  camera.rotation = camera.rotation - 1 
+} else if (Raylib.isKeyDown(KeyCode.KEY_S)) { 
+  camera.rotation = camera.rotation + 1 
+}
+
+// Clamp rotation to prevent disorientation
+if (camera.rotation > 40) camera.rotation = 40
+else if (camera.rotation < -40) camera.rotation = -40
+```
+
+Rotation is clamped to ±40 degrees to keep the view readable. For full rotation (like in top-down games), remove the clamping.
+
+### 5. World Space vs Screen Space
+
+```wren
+Raylib.beginMode2D(camera)
+
+// World space - affected by camera
+Raylib.drawRectangle(-6000, 320, 13000, 8000, Color.DarkGray)
+Raylib.drawRectangleRec(player, Color.Red)
+
+Raylib.endMode2D()
+
+// Screen space - always visible, not affected by camera
+Raylib.drawText("SCREEN AREA", 640, 10, 20, Color.Red)
+Raylib.drawRectangle(10, 10, 250, 113, Color.SkyBlue)
+```
+
+Everything between `beginMode2D()` and `endMode2D()` is drawn in world space and transformed by the camera. Everything after `endMode2D()` is drawn in screen space (UI, HUD).
+
+### 6. Debug Visualization
+
+```wren
+// Crosshair showing camera target
+Raylib.drawLine(
+  camera.target.x, -screenHeight*10, 
+  camera.target.x, screenHeight*10, 
+  Color.Green
+)
+```
+
+The crosshair lines help visualize exactly where the camera is looking in world space.
+
+### 7. Procedural Building Generation
+
+```wren
+while (i < MAX_BUILDINGS) {
+  var height = Raylib.getRandomValue(100, 800)
+  var width = Raylib.getRandomValue(50, 200)
+  
+  var building = Rectangle.new(
+    -6000 + spacing, 
+    screenHeight - 130.0 - height,
+    width,
+    height
+  )
+  
+  buildings.add(building)
+  spacing = spacing + building.width
+  
+  buildColors.add(Color.new(
+    Raylib.getRandomValue(200, 240),
+    Raylib.getRandomValue(200, 240),
+    Raylib.getRandomValue(200, 250),
+    255
+  ))
+}
+```
+
+Buildings are generated with random heights and widths, positioned side-by-side to create a city skyline.
+
+## Key Concepts
+
+### Camera Spaces
+
+- **World Space**: The actual game world coordinates (where game objects exist)
+- **Screen Space**: Pixel coordinates on the display (for UI elements)
+- **Camera Transform**: Converts world space to screen space based on target, offset, zoom, and rotation
+
+### Camera Properties
+
+| Property | Description | Use Case |
+|----------|-------------|----------|
+| `target` | World position to look at | Following player, panning to location |
+| `offset` | Screen position of camera center | Centering camera, split-screen |
+| `zoom` | Scale factor | Zooming in/out, cinematic effects |
+| `rotation` | Angle in degrees | Tilted views, disorientation effects |
+
+### Smooth Camera Movement
+
+For smoother camera following, use linear interpolation (lerp):
+
+```wren
+// Smooth follow (add this to your code)
+var lerpSpeed = 0.1
+var targetX = player.x + 20
+var targetY = player.y + 20
+
+camera.target = Vector2.new(
+  camera.target.x + (targetX - camera.target.x) * lerpSpeed,
+  camera.target.y + (targetY - camera.target.y) * lerpSpeed
+)
+```
+
+## Common Use Cases
+
+### Platform Games
+```wren
+// Keep player centered horizontally, but let them move up/down
+camera.target = Vector2.new(
+  player.x + player.width / 2,
+  screenHeight / 2
+)
+```
+
+### Top-Down Games
+```wren
+// Center on player with slight lead in movement direction
+var leadDistance = 50
+camera.target = Vector2.new(
+  player.x + player.velocityX * leadDistance,
+  player.y + player.velocityY * leadDistance
+)
+```
+
+### Camera Shake Effect
+```wren
+// Add random offset for impact effects
+var shakeIntensity = 10
+if (isShaking) {
+  camera.offset = Vector2.new(
+    screenWidth/2 + Raylib.getRandomValue(-shakeIntensity, shakeIntensity),
+    screenHeight/2 + Raylib.getRandomValue(-shakeIntensity, shakeIntensity)
+  )
+}
+```
+
+### Zoom Cinematic
+```wren
+// Gradually zoom in for dramatic effect
+if (cinematicMode) {
+  camera.zoom = camera.zoom + 0.01
+  if (camera.zoom > 2.0) camera.zoom = 2.0
+}
+```
+
+## Enhancements to Try
+
+1. **Camera bounds**: Prevent camera from showing areas outside the game world
+2. **Smooth zoom**: Use lerp for gradual zoom changes
+3. **Screen shake**: Add impact effects using random offset changes
+4. **Dead zone**: Only move camera when player moves far from center
+5. **Look-ahead**: Offset camera slightly in the direction of movement
+6. **Parallax layers**: Add background layers that move at different speeds
+7. **Minimap**: Use a second camera to render a minimap in screen space
+
+## Related Examples
+
+- [Basic Window](/examples/basic-window) - Window setup fundamentals
+- [Asteroid Game](/examples/asteroid-game) - Game with screen wrapping
+- [Breakout Game](/examples/breakout-game) - Camera effects (shake)

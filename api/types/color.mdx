@@ -1,0 +1,238 @@
+---
+title: Color
+description: RGBA color with predefined color constants
+---
+
+The `Color` class represents an RGBA color (red, green, blue, alpha). It includes many predefined color constants for convenience.
+
+## Constructor
+
+<ParamField path="Color.new" type="function">
+  Creates a new color with RGBA values
+  
+  <Expandable title="parameters">
+    <ParamField path="r" type="number" required>
+      Red component (0-255)
+    </ParamField>
+    <ParamField path="g" type="number" required>
+      Green component (0-255)
+    </ParamField>
+    <ParamField path="b" type="number" required>
+      Blue component (0-255)
+    </ParamField>
+    <ParamField path="a" type="number" required>
+      Alpha/transparency component (0-255, where 255 is fully opaque)
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Predefined Colors
+
+Color provides many predefined color constants that you can use directly:
+
+### Grayscale
+
+<ParamField path="Color.White" type="Color">
+  White (255, 255, 255, 255)
+</ParamField>
+
+<ParamField path="Color.Black" type="Color">
+  Black (0, 0, 0, 255)
+</ParamField>
+
+<ParamField path="Color.LightGray" type="Color">
+  Light gray (200, 200, 200, 255)
+</ParamField>
+
+<ParamField path="Color.Gray" type="Color">
+  Gray (130, 130, 130, 255)
+</ParamField>
+
+<ParamField path="Color.DarkGray" type="Color">
+  Dark gray (80, 80, 80, 255)
+</ParamField>
+
+### Primary Colors
+
+<ParamField path="Color.Red" type="Color">
+  Red (230, 41, 55, 255)
+</ParamField>
+
+<ParamField path="Color.Green" type="Color">
+  Green (0, 228, 48, 255)
+</ParamField>
+
+<ParamField path="Color.Blue" type="Color">
+  Blue (0, 121, 241, 255)
+</ParamField>
+
+### Extended Colors
+
+<ParamField path="Color.Yellow" type="Color">
+  Yellow (253, 249, 0, 255)
+</ParamField>
+
+<ParamField path="Color.Gold" type="Color">
+  Gold (255, 203, 0, 255)
+</ParamField>
+
+<ParamField path="Color.Orange" type="Color">
+  Orange (255, 161, 0, 255)
+</ParamField>
+
+<ParamField path="Color.Pink" type="Color">
+  Pink (255, 109, 194, 255)
+</ParamField>
+
+<ParamField path="Color.Maroon" type="Color">
+  Maroon (190, 33, 55, 255)
+</ParamField>
+
+<ParamField path="Color.Lime" type="Color">
+  Lime (0, 158, 47, 255)
+</ParamField>
+
+<ParamField path="Color.DarkGreen" type="Color">
+  Dark green (0, 117, 44, 255)
+</ParamField>
+
+<ParamField path="Color.SkyBlue" type="Color">
+  Sky blue (102, 191, 255, 255)
+</ParamField>
+
+<ParamField path="Color.DarkBlue" type="Color">
+  Dark blue (0, 82, 172, 255)
+</ParamField>
+
+<ParamField path="Color.Purple" type="Color">
+  Purple (200, 122, 255, 255)
+</ParamField>
+
+<ParamField path="Color.Violet" type="Color">
+  Violet (135, 60, 190, 255)
+</ParamField>
+
+<ParamField path="Color.DarkPurple" type="Color">
+  Dark purple (112, 31, 126, 255)
+</ParamField>
+
+<ParamField path="Color.Beige" type="Color">
+  Beige (211, 176, 131, 255)
+</ParamField>
+
+<ParamField path="Color.Brown" type="Color">
+  Brown (127, 106, 79, 255)
+</ParamField>
+
+<ParamField path="Color.DarkBrown" type="Color">
+  Dark brown (76, 63, 47, 255)
+</ParamField>
+
+### Special Colors
+
+<ParamField path="Color.RayWhite" type="Color">
+  Raylib's signature white (245, 245, 245, 255)
+</ParamField>
+
+<ParamField path="Color.Magenta" type="Color">
+  Magenta (255, 0, 255, 255)
+</ParamField>
+
+<ParamField path="Color.Blank" type="Color">
+  Transparent (0, 0, 0, 0)
+</ParamField>
+
+## Examples
+
+### Using Predefined Colors
+
+```wren
+import "raylib" for Raylib, Color
+
+Raylib.beginDrawing()
+
+// Clear background with predefined color
+Raylib.clearBackground(Color.RayWhite)
+
+// Draw text with different colors
+Raylib.drawText("Title", 20, 20, 60, Color.Yellow)
+Raylib.drawText("Subtitle", 20, 100, 20, Color.Gray)
+Raylib.drawText("Instructions", 20, 140, 20, Color.DarkGreen)
+
+Raylib.endDrawing()
+```
+
+### Creating Custom Colors
+
+```wren
+import "raylib" for Color, Raylib
+
+// Create a custom color
+var customColor = Color.new(200, 100, 50, 255)
+
+// Create semi-transparent color
+var transparentRed = Color.new(255, 0, 0, 128)
+
+// Use in drawing
+Raylib.drawRectangle(100, 100, 200, 150, customColor)
+```
+
+### Random Colors
+
+```wren
+import "raylib" for Color, Raylib
+
+// Generate random building colors
+var buildColors = []
+
+var i = 0
+while (i < 100) {
+  buildColors.add(Color.new(
+    Raylib.getRandomValue(200, 240),  // red
+    Raylib.getRandomValue(200, 240),  // green
+    Raylib.getRandomValue(200, 250),  // blue
+    255                                // alpha (fully opaque)
+  ))
+  i = i + 1
+}
+```
+
+### Drawing with Colors
+
+```wren
+import "raylib" for Raylib, Color, Rectangle
+
+var player = Rectangle.new(400, 280, 40, 40)
+
+Raylib.beginDrawing()
+Raylib.clearBackground(Color.RayWhite)
+
+// Draw player
+Raylib.drawRectangleRec(player, Color.Red)
+
+// Draw ground
+Raylib.drawRectangle(-6000, 320, 13000, 8000, Color.DarkGray)
+
+// Draw UI elements
+Raylib.drawRectangle(10, 10, 250, 113, Color.SkyBlue)
+Raylib.drawRectangleLines(10, 10, 250, 113, Color.Blue)
+
+Raylib.endDrawing()
+```
+
+### Texture Tinting
+
+```wren
+import "raylib" for Raylib, Texture2D, Vector2, Rectangle, Color
+
+var texture = Texture2D.loadTexture("ball.png")
+
+Raylib.drawTexturePro(
+  texture,
+  Rectangle.new(0, 0, 16, 16),      // source
+  Rectangle.new(100, 100, 32, 32),  // dest
+  Vector2.new(0, 0),                 // origin
+  0.0,                               // rotation
+  Color.new(255, 255, 255, 255)     // tint (white = no tint)
+)
+```

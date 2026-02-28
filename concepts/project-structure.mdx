@@ -1,0 +1,413 @@
+---
+title: Project Structure
+description: Learn how to organize Wren files, imports, and modules in your Talon projects
+icon: folder-tree
+---
+
+## Overview
+
+As your Talon game grows, organizing your code into modules becomes essential. This guide shows you how to structure your project for maintainability and scalability.
+
+## Basic Project Structure
+
+A simple Talon project might look like this:
+
+```
+my-game/
+├── main.wren          # Entry point
+└── game.wren          # Game logic
+```
+
+### Entry Point (main.wren)
+
+The entry point initializes the window and runs the game loop:
+
+```wren main.wren
+import "raylib" for Color, Raylib
+import "./game" for Game
+
+var width = 600
+var height = 800
+
+Raylib.initWindow(width, height, "My Game")
+Raylib.setTargetFPS(60)
+
+var game = Game.new()
+
+while (!Raylib.windowShouldClose()) {
+  game.update()
+
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.new(20, 20, 20, 255))
+  game.draw()
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+### Game Logic (game.wren)
+
+The game module contains your main game logic:
+
+```wren game.wren
+import "raylib" for Color, Raylib, KeyCode
+
+class Game {
+  construct new() {
+    _player_x = 300
+    _player_y = 400
+  }
+
+  update() {
+    if (Raylib.isKeyDown(KeyCode.KEY_LEFT)) {
+      _player_x = _player_x - 5
+    }
+    if (Raylib.isKeyDown(KeyCode.KEY_RIGHT)) {
+      _player_x = _player_x + 5
+    }
+  }
+
+  draw() {
+    Raylib.drawRectangle(_player_x, _player_y, 50, 50, Color.Blue)
+  }
+}
+```
+
+## Modular Project Structure
+
+For larger games, organize code by feature or entity type:
+
+```
+breakout/
+├── main.wren          # Entry point
+├── game.wren          # Main game class
+├── ball.wren          # Ball entity
+├── paddle.wren        # Paddle entity
+├── brick.wren         # Brick entity
+├── particle.wren      # Particle effects
+├── score.wren         # Score display
+├── utils.wren         # Shared constants
+└── res/               # Resources
+    ├── ball.png
+    ├── paddle.png
+    └── brick.png
+```
+
+This is the structure used in the `examples/breakout/` demo.
+
+## Import Patterns
+
+### Importing Built-in Modules
+
+Talon provides several built-in modules:
+
+```wren
+import "raylib" for Color, Raylib, Rectangle, Vector2, Camera2D, KeyCode, Texture2D
+import "math" for Math
+import "builtin" for Build
+```
+
+### Importing Local Files
+
+Use relative paths with the `./` prefix:
+
+```wren
+import "./game" for Game
+import "./ball" for Ball, BALL_W, BALL_H
+import "./paddle" for Paddle, PADDLE_SPEED, PADDLE_W
+import "./brick" for Brick, BRICK_W
+```
+
+<Note>
+  You can import multiple items from a single module by separating them with commas.
+</Note>
+
+## Sharing Constants
+
+Create a `utils.wren` file for shared constants:
+
+```wren utils.wren
+var SCREEN_WIDTH = 600
+var SCREEN_HEIGHT = 800
+```
+
+Then import it in other files:
+
+```wren
+import "./utils" for SCREEN_WIDTH, SCREEN_HEIGHT
+
+class Paddle {
+  construct new() {
+    _rec = Rectangle.new(
+      SCREEN_WIDTH / 2.0 - PADDLE_W / 2.0,
+      SCREEN_HEIGHT - PADDLE_H - 20.0,
+      PADDLE_W,
+      PADDLE_H
+    )
+  }
+}
+```
+
+## Complete Example: Breakout Structure
+
+Here's how the breakout example is organized:
+
+### main.wren
+
+```wren examples/breakout/main.wren
+import "raylib" for Color, Raylib
+import "math" for Math
+import "./game" for Game
+
+var width = 600
+var height = 800
+
+Raylib.initWindow(width, height, "Breakout")
+Raylib.setTargetFPS(60)
+
+var game = Game.new()
+
+while (!Raylib.windowShouldClose()) {
+  game.update()
+
+  Raylib.beginDrawing()
+  game.draw()
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+### game.wren
+
+```wren examples/breakout/game.wren
+import "raylib" for Color, Raylib, Rectangle, Vector2, Texture2D
+import "./brick" for Brick
+import "./ball" for Ball
+import "./paddle" for Paddle
+import "./utils" for SCREEN_HEIGHT, SCREEN_WIDTH
+
+class Game {
+  construct new() {
+    _brick_texture = Texture2D.loadTexture("res/brick.png")
+    _ball_texture = Texture2D.loadTexture("res/tennis.png")
+    _paddle_texture = Texture2D.loadTexture("res/paddle.png")
+    _bricks = Brick.new_bricks(5, 10)
+    _ball = Ball.new()
+    _paddle = Paddle.new()
+    _score = 0.0
+  }
+
+  update() {
+    var dt = Raylib.getFrameTime()
+    
+    // Update ball
+    _ball.rec.x = _ball.rec.x + _ball.vel.x * dt
+    _ball.rec.y = _ball.rec.y + _ball.vel.y * dt
+    
+    // Check collisions
+    // ...
+  }
+
+  draw() {
+    Raylib.clearBackground(Color.new(0, 0, 0, 255))
+    
+    for (brick in _bricks) {
+      brick.draw(_brick_texture)
+    }
+    
+    _paddle.draw(_paddle_texture)
+    _ball.draw(_ball_texture)
+  }
+}
+```
+
+### ball.wren
+
+```wren examples/breakout/ball.wren
+import "raylib" for Raylib, Rectangle, Vector2, Color
+import "./paddle" for PADDLE_H
+import "./utils" for SCREEN_HEIGHT, SCREEN_WIDTH
+
+var BALL_W = 16.0
+var BALL_H = 16.0
+var BALL_SPEED = 300.0
+
+class Ball {
+  construct new() {
+    _rec = Rectangle.new(
+      SCREEN_WIDTH / 2.0 - BALL_W / 2.0,
+      SCREEN_HEIGHT - BALL_H - PADDLE_H - 40.0,
+      BALL_W,
+      BALL_H
+    )
+    _vel = Vector2.new(BALL_SPEED, -BALL_SPEED)
+  }
+
+  rec { _rec }
+  vel { _vel }
+
+  draw(texture) {
+    Raylib.drawTexturePro(
+      texture,
+      Rectangle.new(0.0, 0.0, 16.0, 16.0),
+      _rec,
+      Vector2.new(0.0, 0.0),
+      0.0,
+      Color.new(255, 255, 255, 255)
+    )
+  }
+}
+```
+
+## Exporting from Modules
+
+Wren automatically exports:
+- Top-level classes
+- Top-level variables
+- Top-level constants
+
+You can then import specific items:
+
+```wren
+// ball.wren exports: Ball class, BALL_W, BALL_H, BALL_SPEED
+import "./ball" for Ball, BALL_W, BALL_H
+```
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="One entity per file">
+    Keep related code together. Each entity (Player, Enemy, Bullet) should have its own file:
+    
+    ```
+    entities/
+    ├── player.wren
+    ├── enemy.wren
+    └── bullet.wren
+    ```
+  </Accordion>
+  
+  <Accordion title="Group by feature">
+    For larger games, group files by feature:
+    
+    ```
+    my-game/
+    ├── main.wren
+    ├── game.wren
+    ├── player/
+    │   ├── player.wren
+    │   ├── input.wren
+    │   └── abilities.wren
+    ├── enemies/
+    │   ├── enemy.wren
+    │   ├── ai.wren
+    │   └── spawner.wren
+    └── ui/
+        ├── hud.wren
+        └── menu.wren
+    ```
+  </Accordion>
+  
+  <Accordion title="Share constants via utils">
+    Avoid magic numbers by defining constants:
+    
+    ```wren utils.wren
+    var SCREEN_WIDTH = 600
+    var SCREEN_HEIGHT = 800
+    var GRAVITY = 980.0
+    var MAX_SPEED = 500.0
+    ```
+  </Accordion>
+  
+  <Accordion title="Keep main.wren simple">
+    Your main file should only:
+    - Import the Game class
+    - Initialize the window
+    - Run the game loop
+    - Clean up
+    
+    All game logic should be in separate modules.
+  </Accordion>
+  
+  <Accordion title="Organize resources">
+    Keep assets in a `res/` directory:
+    
+    ```
+    my-game/
+    ├── main.wren
+    ├── game.wren
+    └── res/
+        ├── sprites/
+        │   ├── player.png
+        │   └── enemy.png
+        ├── audio/
+        │   └── music.ogg
+        └── fonts/
+            └── game.ttf
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Module Dependencies
+
+Be mindful of circular dependencies. If `a.wren` imports `b.wren` and `b.wren` imports `a.wren`, you'll have issues.
+
+<Warning>
+  Avoid circular imports by:
+  - Moving shared code to a separate module
+  - Using composition instead of circular references
+  - Restructuring your module hierarchy
+</Warning>
+
+### Good Pattern
+
+```
+utils.wren         # Shared constants
+  ↑
+  ├── ball.wren    # Imports utils
+  ├── paddle.wren  # Imports utils
+  └── brick.wren   # Imports utils
+  ↑
+game.wren         # Imports ball, paddle, brick
+  ↑
+main.wren         # Imports game
+```
+
+## Example Projects
+
+Explore these example projects in the Talon repository:
+
+<CardGroup cols={2}>
+  <Card title="Basic Example" icon="play">
+    Simple single-file game
+    `examples/basic.wren`
+  </Card>
+  
+  <Card title="Breakout" icon="gamepad">
+    Multi-module game structure
+    `examples/breakout/`
+  </Card>
+  
+  <Card title="Build Executable" icon="box">
+    Example with build configuration
+    `examples/build-exe/`
+  </Card>
+  
+  <Card title="Build WASM" icon="globe">
+    Web-ready game structure
+    `examples/build-wasm/`
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Wren Language" icon="code" href="/concepts/wren-language">
+    Learn more about Wren syntax
+  </Card>
+  <Card title="Hot Reload" icon="fire" href="/concepts/hot-reload">
+    Use hot reload for rapid development
+  </Card>
+</CardGroup>

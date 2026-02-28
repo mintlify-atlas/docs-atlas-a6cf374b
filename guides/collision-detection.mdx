@@ -1,0 +1,427 @@
+---
+title: Collision Detection
+description: Learn how to detect collisions between game objects
+---
+
+Collision detection is essential for creating interactive games. Talon provides Raylib's comprehensive collision detection functions for rectangles, circles, points, and more.
+
+## Rectangle Collisions
+
+The most common collision type for games. Perfect for walls, platforms, and box-shaped objects.
+
+### `checkCollisionRecs()` - Rectangle vs Rectangle
+
+```wren
+import "raylib" for Raylib, Rectangle
+
+var player = Rectangle.new(100, 100, 40, 40)
+var wall = Rectangle.new(200, 100, 60, 200)
+
+if (Raylib.checkCollisionRecs(player, wall)) {
+  // Collision detected!
+  System.print("Player hit the wall!")
+}
+```
+
+<Tip>
+  `checkCollisionRecs()` returns `true` if rectangles overlap, `false` otherwise.
+</Tip>
+
+## Circle Collisions
+
+Ideal for spherical objects, explosions, and detection ranges.
+
+### `checkCollisionCircles()` - Circle vs Circle
+
+```wren
+import "raylib" for Raylib, Vector2
+
+var player = Vector2.new(100, 100)
+var playerRadius = 20
+
+var enemy = Vector2.new(150, 150)
+var enemyRadius = 25
+
+if (Raylib.checkCollisionCircles(player, playerRadius, enemy, enemyRadius)) {
+  // Circles are overlapping
+  System.print("Hit!")
+}
+```
+
+## Hybrid Collisions
+
+### `checkCollisionCircleRec()` - Circle vs Rectangle
+
+```wren
+var ballPos = Vector2.new(150, 150)
+var ballRadius = 10
+var brick = Rectangle.new(100, 100, 50, 20)
+
+if (Raylib.checkCollisionCircleRec(ballPos, ballRadius, brick)) {
+  // Ball hit the brick
+}
+```
+
+<Note>
+  Use circle-rectangle collision for games like Breakout where a circular ball bounces off rectangular bricks.
+</Note>
+
+## Point Collisions
+
+Check if a point is inside a shape. Perfect for mouse clicks and raycasting.
+
+### `checkCollisionPointRec()` - Point vs Rectangle
+
+```wren
+var mousePos = Raylib.getMousePosition()
+var button = Rectangle.new(100, 100, 200, 50)
+
+if (Raylib.checkCollisionPointRec(mousePos, button)) {
+  if (Raylib.isMouseButtonPressed(MouseButton.MOUSE_LEFT_BUTTON)) {
+    System.print("Button clicked!")
+  }
+}
+```
+
+### `checkCollisionPointCircle()` - Point vs Circle
+
+```wren
+var mousePos = Raylib.getMousePosition()
+var circleCenter = Vector2.new(400, 300)
+var circleRadius = 50
+
+if (Raylib.checkCollisionPointCircle(mousePos, circleCenter, circleRadius)) {
+  System.print("Mouse over circle")
+}
+```
+
+## Real-World Example: Asteroid Game
+
+The asteroid game demonstrates collision detection between the player ship and meteors:
+
+<Steps>
+  <Step title="Set up player collider">
+    ```wren
+    class Player {
+      construct new(position, speed, acceleration, rotation, collider, color) {
+        _position = position
+        _speed = speed
+        _acceleration = acceleration
+        _rotation = rotation
+        _collider = collider  // Vector3 (x, y, radius)
+        _color = color
+      }
+
+      collider { _collider }
+      collider=(value) { _collider = value }
+    }
+    ```
+  </Step>
+
+  <Step title="Update collider position">
+    ```wren
+    // Update player collider position based on ship rotation
+    var DEG2RAD = 0.017453
+
+    _player.collider = Vector3.new(
+      player.position.x + Math.sin(player.rotation * DEG2RAD) * (_shipHeight / 2.5),
+      player.position.y - Math.cos(player.rotation * DEG2RAD) * (_shipHeight / 2.5),
+      12  // radius
+    )
+    ```
+  </Step>
+
+  <Step title="Check collisions with meteors">
+    ```wren
+    // Check collision with medium meteors
+    for (i in 0...MAX_MEDIUM_METEORS) {
+      if (Raylib.checkCollisionCircles(
+        Vector2.new(player.collider.x, player.collider.y),
+        player.collider.z,  // radius stored in z
+        _mediumMeteor[i].position,
+        _mediumMeteor[i].radius
+      ) && _mediumMeteor[i].active) {
+        _gameOver = true
+      }
+    }
+
+    // Check collision with small meteors
+    for (a in 0...MAX_SMALL_METEORS) {
+      if (Raylib.checkCollisionCircles(
+        Vector2.new(player.collider.x, player.collider.y),
+        player.collider.z,
+        _smallMeteor[a].position,
+        _smallMeteor[a].radius
+      ) && _smallMeteor[a].active) {
+        _gameOver = true
+      }
+    }
+    ```
+  </Step>
+</Steps>
+
+<Tip>
+  The asteroid game uses `Vector3` to store circle collision data (x, y, radius) in a single object.
+</Tip>
+
+## Real-World Example: Breakout Game
+
+The Breakout game shows multiple collision scenarios:
+
+<Steps>
+  <Step title="Ball vs Bricks">
+    ```wren
+    class Game {
+      update_playing() {
+        var i = 0
+        while (i < _bricks.count) {
+          var brick = _bricks[i]
+          var collided = Raylib.checkCollisionRecs(_ball.rec, brick.rec)
+
+          if (collided) {
+            // Handle collision response
+            _ball.apply_collission(brick.rec)
+
+            // Add score
+            _score = _score + 1 * _score_multiplier
+            _score_multiplier = _score_multiplier + 1
+
+            // Remove brick
+            _bricks.removeAt(i)
+
+            // Check win condition
+            if (_bricks.count == 0) {
+              _status = GameStatus.Won
+              return
+            }
+          } else {
+            i = i + 1
+          }
+        }
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Ball vs Paddle">
+    ```wren
+    if (Raylib.checkCollisionRecs(_ball.rec, _paddle.rec)) {
+      _score_multiplier = 1
+
+      // Adjust ball direction based on hit position
+      if (_ball.rec.x + BALL_W / 2.0 < _paddle.rec.x + PADDLE_W / 2.0) {
+        _ball.vel.x = -PADDLE_SPEED
+      } else {
+        _ball.vel.x = PADDLE_SPEED
+      }
+
+      // Reverse vertical direction
+      _ball.vel.y = _ball.vel.y * -1.0
+
+      // Move ball above paddle to prevent sticking
+      _ball.rec.y = _ball.rec.y - BALL_H
+    }
+    ```
+  </Step>
+
+  <Step title="Ball vs Walls">
+    ```wren
+    // Check wall collisions
+    var c_left = _ball.rec.x < 0.0
+    var c_up = _ball.rec.y < 0.0
+    var c_right = _ball.rec.x + _ball.rec.width > SCREEN_WIDTH
+    var c_down = _ball.rec.y + _ball.rec.height > SCREEN_HEIGHT
+
+    if (c_left || c_right) {
+      _ball.vel.x = _ball.vel.x * -1.0
+    }
+    if (c_up) {
+      _ball.vel.y = _ball.vel.y * -1.0
+    }
+    if (c_down) {
+      _status = GameStatus.Over  // Game over if ball falls
+      return
+    }
+    ```
+  </Step>
+</Steps>
+
+## Collision Response
+
+Detecting collision is only half the battle. You also need to respond appropriately:
+
+### Simple Bounce
+
+```wren
+if (Raylib.checkCollisionRecs(ball, wall)) {
+  // Reverse velocity
+  ball.vel.x = ball.vel.x * -1.0
+}
+```
+
+### Smart Bounce (Breakout)
+
+The Breakout game implements intelligent collision response:
+
+```wren
+class Ball {
+  apply_collission(rec) {
+    var prev_x = _rec.x - _vel.x
+    var prev_y = _rec.y - _vel.y
+
+    // Determine which side was hit
+    if (prev_y + _rec.height <= rec.y) {
+      // Hit from top
+      _vel.y = _vel.y * -1.0
+    } else if (prev_y >= rec.y + rec.height) {
+      // Hit from bottom
+      _vel.y = _vel.y * -1.0
+    } else if (prev_x + _rec.width <= rec.x) {
+      // Hit from left
+      _vel.x = _vel.x * -1.0
+    } else if (prev_x >= rec.x + rec.width) {
+      // Hit from right
+      _vel.x = _vel.x * -1.0
+    } else {
+      // Default to vertical bounce
+      _vel.y = _vel.y * -1.0
+    }
+  }
+}
+```
+
+<Tip>
+  Store the previous position to determine which side of an object was hit, enabling accurate collision response.
+</Tip>
+
+## Complete Collision Example
+
+<CodeGroup>
+```wren Rectangle Collision
+import "raylib" for Raylib, Rectangle, Color, KeyCode
+
+var screenWidth = 800
+var screenHeight = 450
+
+Raylib.initWindow(screenWidth, screenHeight, "Collision Example")
+
+var player = Rectangle.new(100, 100, 40, 40)
+var obstacle = Rectangle.new(300, 200, 100, 100)
+var speed = 5
+
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+  var oldX = player.x
+  var oldY = player.y
+
+  // Move player
+  if (Raylib.isKeyDown(KeyCode.KEY_RIGHT)) { player.x = player.x + speed }
+  if (Raylib.isKeyDown(KeyCode.KEY_LEFT)) { player.x = player.x - speed }
+  if (Raylib.isKeyDown(KeyCode.KEY_UP)) { player.y = player.y - speed }
+  if (Raylib.isKeyDown(KeyCode.KEY_DOWN)) { player.y = player.y + speed }
+
+  // Check collision and revert if colliding
+  if (Raylib.checkCollisionRecs(player, obstacle)) {
+    player.x = oldX
+    player.y = oldY
+  }
+
+  // Draw
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+
+  Raylib.drawRectangleRec(player, Color.Green)
+  Raylib.drawRectangleRec(obstacle, Color.Red)
+  Raylib.drawText("Use arrow keys to move", 10, 10, 20, Color.Black)
+
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+```wren Circle Collision
+import "raylib" for Raylib, Vector2, Color, KeyCode
+
+var screenWidth = 800
+var screenHeight = 450
+
+Raylib.initWindow(screenWidth, screenHeight, "Circle Collision")
+
+var player = Vector2.new(100, 100)
+var playerRadius = 20
+var enemy = Vector2.new(300, 200)
+var enemyRadius = 30
+var speed = 3
+
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+  // Move player
+  if (Raylib.isKeyDown(KeyCode.KEY_RIGHT)) { player.x = player.x + speed }
+  if (Raylib.isKeyDown(KeyCode.KEY_LEFT)) { player.x = player.x - speed }
+  if (Raylib.isKeyDown(KeyCode.KEY_UP)) { player.y = player.y - speed }
+  if (Raylib.isKeyDown(KeyCode.KEY_DOWN)) { player.y = player.y + speed }
+
+  // Check collision
+  var colliding = Raylib.checkCollisionCircles(
+    player, playerRadius,
+    enemy, enemyRadius
+  )
+
+  // Draw
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+
+  Raylib.drawCircleV(player, playerRadius, colliding ? Color.Red : Color.Green)
+  Raylib.drawCircleV(enemy, enemyRadius, Color.Blue)
+  Raylib.drawText("Use arrow keys to move", 10, 10, 20, Color.Black)
+
+  if (colliding) {
+    Raylib.drawText("COLLISION!", 300, 10, 40, Color.Red)
+  }
+
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+</CodeGroup>
+
+## Other Collision Functions
+
+Raylib provides additional collision detection functions:
+
+```wren
+// Point vs Triangle
+Raylib.checkCollisionPointTriangle(point, p1, p2, p3)
+
+// Point vs Line
+Raylib.checkCollisionPointLine(point, p1, p2, threshold)
+
+// Circle vs Line
+Raylib.checkCollisionCircleLine(center, radius, p1, p2)
+
+// Line vs Line
+Raylib.checkCollisionLines(startPos1, endPos1, startPos2, endPos2, collisionPoint)
+
+// Get collision rectangle (intersection)
+var intersection = Raylib.getCollisionRec(rec1, rec2)
+```
+
+## Performance Tips
+
+<Note>
+  **Optimization strategies:**
+  - Only check collisions between objects that can interact
+  - Use broad-phase detection (check distance first) before precise collision
+  - Deactivate collision checks for off-screen objects
+  - Use spatial partitioning for large numbers of objects
+</Note>
+
+## Next Steps
+
+- [Add player input](/guides/handling-input) to create interactive collision systems
+- [Use the camera](/guides/2d-camera) to follow collision-based gameplay
+- [Organize collision code](/guides/using-modules) into reusable modules

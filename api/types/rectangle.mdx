@@ -1,0 +1,164 @@
+---
+title: Rectangle
+description: Rectangle shape with position and dimensions
+---
+
+The `Rectangle` class represents a rectangular area with x, y coordinates and width, height dimensions. It's commonly used for collision detection, UI elements, and sprite rendering.
+
+## Constructor
+
+<ParamField path="Rectangle.new" type="function">
+  Creates a new rectangle
+  
+  <Expandable title="parameters">
+    <ParamField path="x" type="number" required>
+      The x coordinate of the top-left corner
+    </ParamField>
+    <ParamField path="y" type="number" required>
+      The y coordinate of the top-left corner
+    </ParamField>
+    <ParamField path="width" type="number" required>
+      The width of the rectangle
+    </ParamField>
+    <ParamField path="height" type="number" required>
+      The height of the rectangle
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Properties
+
+<ParamField path="x" type="number">
+  The x coordinate of the rectangle's top-left corner (read/write)
+</ParamField>
+
+<ParamField path="y" type="number">
+  The y coordinate of the rectangle's top-left corner (read/write)
+</ParamField>
+
+<ParamField path="width" type="number">
+  The width of the rectangle (read/write)
+</ParamField>
+
+<ParamField path="height" type="number">
+  The height of the rectangle (read/write)
+</ParamField>
+
+## Methods
+
+<ParamField path="drawRectangleRec" type="function">
+  Draws the rectangle with the specified color
+  
+  <Expandable title="parameters">
+    <ParamField path="color" type="Color" required>
+      The color to draw the rectangle with
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Examples
+
+### Creating a Rectangle
+
+```wren
+import "raylib" for Rectangle
+
+// Create a player rectangle
+var player = Rectangle.new(400, 280, 40, 40)
+
+// Create a building rectangle
+var building = Rectangle.new(100, 200, 150, 300)
+```
+
+### Drawing a Rectangle
+
+```wren
+import "raylib" for Raylib, Rectangle, Color
+
+var rect = Rectangle.new(100, 100, 200, 150)
+
+Raylib.beginDrawing()
+Raylib.clearBackground(Color.RayWhite)
+
+// Draw using Raylib static method
+Raylib.drawRectangleRec(rect, Color.Red)
+
+Raylib.endDrawing()
+```
+
+### Modifying Rectangle Properties
+
+```wren
+import "raylib" for Rectangle, KeyCode, Raylib
+
+var player = Rectangle.new(400, 280, 40, 40)
+
+// Move player based on input
+if (Raylib.isKeyDown(KeyCode.KEY_RIGHT)) {
+  player.x = player.x + 2
+} else if (Raylib.isKeyDown(KeyCode.KEY_LEFT)) {
+  player.x = player.x - 2
+}
+```
+
+### Real Usage from Camera Example
+
+```wren
+import "raylib" for Raylib, Rectangle, Color
+
+var player = Rectangle.new(400, 280, 40, 40)
+var buildings = []
+var buildColors = []
+
+var i = 0
+while (i < 100) {
+  var height = Raylib.getRandomValue(100, 800)
+  var width = Raylib.getRandomValue(50, 200)
+  
+  var building = Rectangle.new(
+    -6000 + spacing, 
+    screenHeight - 130.0 - height,
+    width,
+    height
+  )
+  
+  buildings.add(building)
+  buildColors.add(Color.new(
+    Raylib.getRandomValue(200, 240),
+    Raylib.getRandomValue(200, 240),
+    Raylib.getRandomValue(200, 250),
+    255
+  ))
+  
+  i = i + 1
+}
+
+// Draw all buildings
+i = 0
+while (i < buildings.count) {
+  Raylib.drawRectangleRec(buildings[i], buildColors[i])
+  i = i + 1
+}
+
+// Draw player
+Raylib.drawRectangleRec(player, Color.Red)
+```
+
+### Ball Rectangle Example
+
+```wren
+import "raylib" for Rectangle
+
+var BALL_W = 16.0
+var BALL_H = 16.0
+var SCREEN_WIDTH = 800
+var SCREEN_HEIGHT = 450
+
+// Create ball rectangle
+var ballRec = Rectangle.new(
+  SCREEN_WIDTH / 2.0 - BALL_W / 2.0,
+  SCREEN_HEIGHT - BALL_H - 40.0,
+  BALL_W,
+  BALL_H
+)
+```

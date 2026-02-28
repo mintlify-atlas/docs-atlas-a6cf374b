@@ -1,0 +1,208 @@
+---
+title: 'talon --hot'
+description: 'Run Wren scripts with automatic reloading on file changes'
+---
+
+## Overview
+
+The `--hot` flag enables hot reload mode, which automatically watches your project files for changes and restarts your application when modifications are detected. This significantly improves the development workflow by eliminating manual restarts.
+
+## Syntax
+
+```bash
+talon --hot <file.wren>
+```
+
+<ParamField path="file.wren" type="string" required>
+  Path to the main Wren script file to execute with hot reloading enabled.
+</ParamField>
+
+## How It Works
+
+When hot reload is enabled:
+
+1. **Initial Run**: Starts your Talon application normally
+2. **File Watching**: Monitors the current directory and all subdirectories for file changes
+3. **Change Detection**: Uses platform-specific file watchers (inotify on Linux, FSEvents on macOS, ReadDirectoryChangesW on Windows)
+4. **Debouncing**: Waits 25ms after the last change before triggering a reload (prevents multiple rapid reloads)
+5. **Graceful Restart**: Stops the current VM, then starts a new one with the updated code
+6. **WebSocket Notification**: Broadcasts reload events to any connected clients (useful for WASM builds)
+
+## File Watching
+
+The hot reload system watches:
+
+- The current working directory (`.`)
+- All immediate subdirectories
+- All `.wren` files in these locations
+
+**Note**: Deep nested directories beyond one level are not automatically watched. If you need to watch additional directories, you may need to restart the hot reload process.
+
+## Examples
+
+### Basic Hot Reload
+
+Start your game with hot reloading:
+
+```bash
+talon --hot index.wren
+```
+
+Now edit any `.wren` file in your project. The application will automatically restart with your changes.
+
+### Development Workflow
+
+```bash
+$ talon --hot main.wren
+hot main.wren
+Program thread started.
+```
+
+Edit `main.wren` or any imported module:
+
+```bash
+new event: change
+Stop signal received, exiting program.
+Program thread started.
+```
+
+Your changes are now live!
+
+### Working with Multiple Files
+
+The hot reload watches all files in your project:
+
+```bash
+talon --hot main.wren
+```
+
+Edit any of these files to trigger a reload:
+- `main.wren`
+- `game.wren`
+- `utils.wren`
+- Any other `.wren` files in the directory
+
+## Debouncing
+
+The hot reload system includes intelligent debouncing with a 25ms cascade window. This means:
+
+- Multiple rapid file changes (like saving multiple files) are batched together
+- Only one reload occurs after changes stabilize
+- Prevents excessive restarts during bulk edits
+
+## WebSocket Integration
+
+Hot reload includes a WebSocket server that:
+
+- Notifies connected clients about reload events
+- Sends `{"command": "reload_all"}` messages on file changes
+- Useful for browser-based WASM builds that can listen for reload events
+
+## Platform Support
+
+Hot reload is supported on:
+
+- **Linux**: Uses inotify for efficient file watching
+- **macOS**: Uses FSEvents API
+- **Windows**: Uses ReadDirectoryChangesW API
+
+## Limitations
+
+### Current Status
+
+<Warning>
+The current implementation restarts the entire application on changes. Future versions will support more granular hot reloading of individual modules without full restart.
+</Warning>
+
+### Not Watched
+
+- Files in deeply nested subdirectories (beyond one level)
+- Files outside the current working directory
+- Binary assets (textures, sounds) - these require a manual restart
+
+## Use Cases
+
+### Rapid Prototyping
+
+Perfect for quickly iterating on game mechanics:
+
+```bash
+talon --hot prototype.wren
+```
+
+Tweak values, adjust positions, modify logic - see changes instantly.
+
+### Game Development
+
+Ideal for game development workflow:
+
+```bash
+talon --hot game.wren
+```
+
+- Adjust player physics
+- Tweak enemy AI
+- Modify level layouts
+- Change visual effects
+
+All without manual restarts.
+
+### Learning and Experimentation
+
+Great for learning Talon and Raylib:
+
+```bash
+talon --hot tutorial.wren
+```
+
+Make changes and instantly see the results.
+
+## Performance Considerations
+
+- **Startup Time**: Each reload includes full VM initialization
+- **State Loss**: Application state is not preserved across reloads
+- **File I/O**: Minimal overhead from file watching on modern systems
+
+## Comparison with Normal Run
+
+| Feature | `talon <file>` | `talon --hot <file>` |
+|---------|----------------|----------------------|
+| Initial startup | Same | Same |
+| File watching | No | Yes |
+| Auto-reload | No | Yes |
+| Manual restart needed | Yes | No |
+| WebSocket server | No | Yes |
+| Best for | Production, testing | Development |
+
+## Related Commands
+
+- [`talon run`](/cli/run) - Run without hot reload
+- [`talon init-exe`](/cli/init-exe) - Generate production builds
+- [`talon init-wasm`](/cli/init-wasm) - Generate WASM builds with hot reload support
+
+## Tips
+
+### Maximize Efficiency
+
+1. **Keep Entry Point Small**: Put most logic in separate modules to minimize reload time
+2. **Use Modular Design**: Well-structured code benefits more from hot reload
+3. **Save All Files**: Some editors save files with delays - ensure files are saved before expecting reload
+
+### Debugging
+
+If hot reload isn't working:
+
+1. Check file permissions
+2. Verify the file is in the watched directory
+3. Look for error messages in the console
+4. Ensure file changes are actually being saved
+
+### Exit Hot Reload
+
+To stop the hot reload process:
+
+```bash
+Ctrl+C
+```
+
+This gracefully stops the file watcher and exits the application.

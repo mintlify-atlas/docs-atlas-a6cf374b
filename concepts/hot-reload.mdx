@@ -1,0 +1,310 @@
+---
+title: Hot Reload
+description: Use hot reload mode for rapid game development and instant feedback
+icon: fire
+---
+
+## What is Hot Reload?
+
+Hot reload automatically restarts your game whenever you save changes to your Wren files. This enables rapid iteration without manually restarting your game after every change.
+
+<Info>
+  Hot reload watches all `.wren` files in your project directory and subdirectories, automatically reloading when changes are detected.
+</Info>
+
+## Enabling Hot Reload
+
+Run Talon with the `--hot` flag:
+
+```bash
+talon --hot main.wren
+```
+
+This starts your game in hot reload mode with file watching enabled.
+
+## How It Works
+
+When you run with `--hot`, Talon:
+
+1. **Starts a file watcher** that monitors all `.wren` files in the current directory and subdirectories
+2. **Runs your game** in a separate thread
+3. **Detects file changes** and triggers a reload
+4. **Stops the current game instance** gracefully
+5. **Restarts the game** with the updated code
+
+<Note>
+  Changes are debounced with a 25ms window, so rapid successive saves won't trigger multiple reloads.
+</Note>
+
+## Writing Hot Reload Compatible Code
+
+To make your game work smoothly with hot reload, include the stop signal check in your main loop:
+
+```wren
+import "raylib" for Color, Raylib
+import "builtin" for Build
+
+Raylib.initWindow(800, 600, "My Game")
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose() && !Build.shouldStop()) {
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  // Your game code
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+<Warning>
+  Always check both `windowShouldClose()` AND `Build.shouldStop()` in hot reload mode. This ensures the game loop exits cleanly when files change.
+</Warning>
+
+## What Gets Watched?
+
+The file watcher monitors:
+
+- The current directory (`.`)
+- All subdirectories in your project
+- All `.wren` files in these locations
+
+### Example Project Structure
+
+```
+my-game/
+├── main.wren           # Watched
+├── game.wren           # Watched
+├── player/
+│   ├── player.wren     # Watched
+│   └── input.wren      # Watched
+└── enemies/
+    ├── enemy.wren      # Watched
+    └── ai.wren         # Watched
+```
+
+All of these files trigger a reload when modified.
+
+## Use Cases for Hot Reload
+
+Hot reload is especially useful for:
+
+### UI Development
+
+```wren
+import "raylib" for Color, Raylib
+import "builtin" for Build
+
+// Tweak these values and see changes instantly
+var title = "Title Screen"
+var color = Color.Yellow
+var fontSize = 60
+
+Raylib.initWindow(1000, 1000, "UI Development")
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose() && !Build.shouldStop()) {
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  Raylib.drawText(title, 20, 20, fontSize, color)
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+<Tip>
+  Change the `title`, `color`, or `fontSize` variables and save to see instant updates.
+</Tip>
+
+### Gameplay Tuning
+
+```wren
+// Adjust game constants on the fly
+var PLAYER_SPEED = 300.0
+var JUMP_FORCE = 500.0
+var GRAVITY = 980.0
+```
+
+Tweak these values and save to test different gameplay feels immediately.
+
+### Visual Tweaking
+
+```wren
+// Fine-tune positions, sizes, and colors
+var PADDLE_W = 128.0
+var PADDLE_H = 16.0
+var BALL_SPEED = 300.0
+```
+
+## Technical Details
+
+### Thread Management
+
+From `src/watcher/hot.zig`:
+
+```zig
+pub fn hot(gpa: std.mem.Allocator, path: []const u8) !void {
+    var debouncer: Debouncer = .{
+        .cascade_window_ms = 25,
+        .channel = &channel,
+    };
+    debouncer.start();
+    
+    // Start program in separate thread
+    try startProgramThread(gpa, path);
+    
+    while (true) {
+        const event = channel.get();
+        switch (event) {
+            .change => {
+                // Stop current instance
+                stop_signal.store(true, .release);
+                
+                if (program_thread) |thread| {
+                    thread.join();
+                    program_thread = null;
+                }
+                
+                // Restart with new code
+                try startProgramThread(gpa, path);
+            },
+            // ...
+        }
+    }
+}
+```
+
+### Stop Signal
+
+The `Build.shouldStop()` function checks an atomic signal that's set when files change:
+
+```wren
+import "builtin" for Build
+
+while (!Raylib.windowShouldClose() && !Build.shouldStop()) {
+  // Game loop
+}
+```
+
+This allows the game to exit gracefully before the reload occurs.
+
+## Debouncing
+
+Hot reload uses a 25-millisecond debounce window to prevent multiple rapid reloads:
+
+<Steps>
+  <Step title="File change detected">
+    A `.wren` file is saved
+  </Step>
+  <Step title="Start cascade window">
+    A 25ms timer begins
+  </Step>
+  <Step title="Wait for quiet period">
+    If another change occurs within 25ms, the timer resets
+  </Step>
+  <Step title="Trigger reload">
+    After 25ms of no changes, the reload is triggered
+  </Step>
+</Steps>
+
+## Platform Support
+
+Hot reload is supported on:
+
+- Linux (using inotify)
+- macOS (using FSEvents)
+- Windows (using ReadDirectoryChangesW)
+
+The implementation automatically selects the appropriate file watching mechanism for your platform.
+
+## Limitations
+
+<Warning>
+  Hot reload creates a new VM instance on each reload. This means:
+  - Game state is NOT preserved between reloads
+  - You'll restart from the beginning each time
+  - External resources (textures, audio) are reloaded
+</Warning>
+
+## Best Practices
+
+<AccordionGroup>
+  <Accordion title="Always include the stop signal check">
+    ```wren
+    while (!Raylib.windowShouldClose() && !Build.shouldStop()) {
+      // Your game loop
+    }
+    ```
+    Without this, the game won't exit cleanly on reload.
+  </Accordion>
+  
+  <Accordion title="Clean up resources properly">
+    ```wren
+    Raylib.unloadTexture(texture)
+    Raylib.closeWindow()
+    ```
+    Proper cleanup prevents resource leaks across reloads.
+  </Accordion>
+  
+  <Accordion title="Use hot reload for visual/tuning work">
+    Hot reload is perfect for:
+    - Adjusting colors, positions, sizes
+    - Tuning gameplay constants
+    - Refining UI layouts
+    - Testing different visual effects
+  </Accordion>
+  
+  <Accordion title="Consider state preservation for complex games">
+    For games where restarting is slow, consider:
+    - Implementing save states
+    - Using debug commands to skip to specific sections
+    - Organizing code so you can test individual systems
+  </Accordion>
+</AccordionGroup>
+
+## Example: Hot Reload in Action
+
+Here's a complete example showing hot reload in action:
+
+```wren examples/basic.wren
+import "raylib" for Color, Raylib
+import "builtin" for Build
+
+var title = "Title Screen"
+var color = Color.Yellow
+
+var screenWidth = 1000 
+var screenHeight = 1000
+
+Raylib.initWindow(screenWidth, screenHeight, "Hot Reload Example")
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose() && !Build.shouldStop()) {
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  Raylib.drawText(title, 20, 20, 60, color)
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+Run with:
+
+```bash
+talon --hot examples/basic.wren
+```
+
+Then try changing `title` or `color` and save - the window updates instantly!
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Game Loop" icon="rotate" href="/concepts/game-loop">
+    Learn about the main game loop structure
+  </Card>
+  <Card title="Project Structure" icon="folder-tree" href="/concepts/project-structure">
+    Organize your project for efficient development
+  </Card>
+</CardGroup>

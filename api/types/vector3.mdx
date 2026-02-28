@@ -1,0 +1,79 @@
+---
+title: Vector3
+description: 3D vector with x, y, and z components
+---
+
+The `Vector3` class represents a 3-dimensional vector with x, y, and z coordinates. It's used for positions, directions, and transformations in 3D space.
+
+## Constructor
+
+<ParamField path="Vector3.new" type="function">
+  Creates a new 3D vector
+  
+  <Expandable title="parameters">
+    <ParamField path="x" type="number" required>
+      The x coordinate
+    </ParamField>
+    <ParamField path="y" type="number" required>
+      The y coordinate
+    </ParamField>
+    <ParamField path="z" type="number" required>
+      The z coordinate
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Properties
+
+<ParamField path="x" type="number">
+  The x coordinate of the vector (read/write)
+</ParamField>
+
+<ParamField path="y" type="number">
+  The y coordinate of the vector (read/write)
+</ParamField>
+
+<ParamField path="z" type="number">
+  The z coordinate of the vector (read/write)
+</ParamField>
+
+## Examples
+
+### Creating a Vector3
+
+```wren
+import "raylib" for Vector3
+
+// Create a 3D position
+var position = Vector3.new(10.0, 5.0, 0.0)
+
+// Create a direction vector
+var direction = Vector3.new(0.0, 1.0, 0.0)
+```
+
+### Modifying Vector3 Properties
+
+```wren
+import "raylib" for Vector3
+
+var pos = Vector3.new(0, 0, 0)
+
+// Update all coordinates
+pos.x = 100
+pos.y = 50
+pos.z = 25
+```
+
+### 3D Movement
+
+```wren
+import "raylib" for Vector3
+
+var position = Vector3.new(0, 0, 0)
+var velocity = Vector3.new(1.0, 0.0, 0.5)
+
+// Update position
+position.x = position.x + velocity.x
+position.y = position.y + velocity.y
+position.z = position.z + velocity.z
+```

@@ -1,0 +1,301 @@
+---
+title: Camera2D
+description: 2D camera for controlling viewport and rendering
+---
+
+The `Camera2D` class provides camera functionality for 2D scenes, allowing you to control the viewport, zoom, rotation, and camera target for 2D rendering.
+
+## Constructor
+
+<ParamField path="Camera2D.new" type="function">
+  Creates a new 2D camera
+  
+  <Expandable title="parameters">
+    <ParamField path="offset" type="Vector2" required>
+      Camera offset (displacement from target). Typically the screen center for a centered camera.
+    </ParamField>
+    <ParamField path="target" type="Vector2" required>
+      Camera target (what the camera is looking at). The camera will center on this point.
+    </ParamField>
+    <ParamField path="rotation" type="number" required>
+      Camera rotation in degrees
+    </ParamField>
+    <ParamField path="zoom" type="number" required>
+      Camera zoom level (1.0 = normal, 2.0 = 2x zoom, 0.5 = 0.5x zoom)
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+## Properties
+
+<ParamField path="target" type="Vector2">
+  The camera target position (read/write). The camera centers on this point.
+</ParamField>
+
+<ParamField path="rotation" type="number">
+  The camera rotation in degrees (read/write)
+</ParamField>
+
+<ParamField path="zoom" type="number">
+  The camera zoom level (read/write). 1.0 is normal, higher values zoom in, lower values zoom out.
+</ParamField>
+
+## Methods
+
+<ParamField path="beginMode2D" type="function">
+  Begins 2D camera mode. All drawing after this call will be affected by the camera transformations until `endMode2D()` is called.
+</ParamField>
+
+<ParamField path="endMode2D" type="function">
+  Ends 2D camera mode. Drawing will return to screen space.
+</ParamField>
+
+<Note>
+  You can also use the static methods `Raylib.beginMode2D(camera)` and `Raylib.endMode2D()` instead of the instance methods.
+</Note>
+
+## Examples
+
+### Creating a Camera
+
+```wren
+import "raylib" for Camera2D, Vector2
+
+var screenWidth = 800
+var screenHeight = 450
+
+// Create camera centered on screen, looking at player
+var camera = Camera2D.new(
+  Vector2.new(screenWidth / 2.0, screenHeight / 2.0), // offset (screen center)
+  Vector2.new(400, 300),                               // target (player position)
+  0.0,                                                  // rotation
+  1.0                                                   // zoom (normal)
+)
+```
+
+### Basic Camera Usage
+
+```wren
+import "raylib" for Raylib, Camera2D, Vector2, Color, Rectangle
+
+var camera = Camera2D.new(
+  Vector2.new(400, 225),
+  Vector2.new(0, 0),
+  0.0,
+  1.0
+)
+
+Raylib.beginDrawing()
+Raylib.clearBackground(Color.RayWhite)
+
+// Begin camera mode
+Raylib.beginMode2D(camera)
+
+// Everything drawn here is affected by camera
+Raylib.drawRectangle(0, 0, 100, 100, Color.Red)
+Raylib.drawCircle(200, 200, 50, Color.Blue)
+
+// End camera mode
+Raylib.endMode2D()
+
+// UI drawn here is NOT affected by camera (screen space)
+Raylib.drawText("Score: 100", 10, 10, 20, Color.Black)
+
+Raylib.endDrawing()
+```
+
+### Following a Player
+
+```wren
+import "raylib" for Raylib, Camera2D, Vector2, Rectangle, Color, KeyCode
+
+var player = Rectangle.new(400, 280, 40, 40)
+
+var camera = Camera2D.new(
+  Vector2.new(screenWidth / 2.0, screenHeight / 2.0),
+  Vector2.new(player.x + 20, player.y + 20),
+  0.0,
+  1.0
+)
+
+while (!Raylib.windowShouldClose()) {
+  // Update player position
+  if (Raylib.isKeyDown(KeyCode.KEY_RIGHT)) {
+    player.x = player.x + 2
+  } else if (Raylib.isKeyDown(KeyCode.KEY_LEFT)) {
+    player.x = player.x - 2
+  }
+  
+  // Update camera to follow player
+  camera.target = Vector2.new(player.x + 20, player.y + 20)
+  
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  Raylib.beginMode2D(camera)
+  
+  // Draw world
+  Raylib.drawRectangle(-6000, 320, 13000, 8000, Color.DarkGray)
+  Raylib.drawRectangleRec(player, Color.Red)
+  
+  Raylib.endMode2D()
+  
+  Raylib.endDrawing()
+}
+```
+
+### Camera Rotation
+
+```wren
+import "raylib" for Raylib, Camera2D, KeyCode
+
+var camera = Camera2D.new(
+  Vector2.new(400, 225),
+  Vector2.new(0, 0),
+  0.0,
+  1.0
+)
+
+while (!Raylib.windowShouldClose()) {
+  // Rotate camera with keys
+  if (Raylib.isKeyDown(KeyCode.KEY_A)) {
+    camera.rotation = camera.rotation - 1
+  } else if (Raylib.isKeyDown(KeyCode.KEY_S)) {
+    camera.rotation = camera.rotation + 1
+  }
+  
+  // Clamp rotation
+  if (camera.rotation > 40) {
+    camera.rotation = 40
+  } else if (camera.rotation < -40) {
+    camera.rotation = -40
+  }
+  
+  // Draw with camera
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  Raylib.beginMode2D(camera)
+  // ... draw game world ...
+  Raylib.endMode2D()
+  
+  Raylib.endDrawing()
+}
+```
+
+### Camera Zoom
+
+```wren
+import "raylib" for Raylib, Camera2D
+import "math" for Math
+
+var camera = Camera2D.new(
+  Vector2.new(400, 225),
+  Vector2.new(0, 0),
+  0.0,
+  1.0
+)
+
+while (!Raylib.windowShouldClose()) {
+  // Zoom with mouse wheel
+  camera.zoom = Math.exp(
+    Math.log(camera.zoom) + (Raylib.getMouseWheelMove() * 0.1)
+  )
+  
+  // Clamp zoom
+  if (camera.zoom > 3.0) {
+    camera.zoom = 3.0
+  } else if (camera.zoom < 0.1) {
+    camera.zoom = 0.1
+  }
+  
+  // Reset camera with key
+  if (Raylib.isKeyDown(KeyCode.KEY_R)) {
+    camera.zoom = 1.0
+    camera.rotation = 0.0
+  }
+  
+  // ... draw with camera ...
+}
+```
+
+### Complete Camera Example
+
+```wren
+import "raylib" for Raylib, Camera2D, Vector2, Rectangle, Color, KeyCode
+import "math" for Math
+
+var screenWidth = 800
+var screenHeight = 450
+
+Raylib.initWindow(screenWidth, screenHeight, "2D Camera")
+
+var player = Rectangle.new(400, 280, 40, 40)
+
+var camera = Camera2D.new(
+  Vector2.new(screenWidth / 2.0, screenHeight / 2.0),
+  Vector2.new(player.x + 20.0, player.y + 20.0),
+  0.0,  // rotation
+  1.0   // zoom
+)
+
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+  // Movement
+  if (Raylib.isKeyDown(KeyCode.KEY_RIGHT)) {
+    player.x = player.x + 2
+  } else if (Raylib.isKeyDown(KeyCode.KEY_LEFT)) {
+    player.x = player.x - 2
+  }
+  
+  // Update camera target
+  camera.target = Vector2.new(player.x + 20, player.y + 20)
+  
+  // Camera rotation
+  if (Raylib.isKeyDown(KeyCode.KEY_A)) {
+    camera.rotation = camera.rotation - 1
+  } else if (Raylib.isKeyDown(KeyCode.KEY_S)) {
+    camera.rotation = camera.rotation + 1
+  }
+  
+  // Camera zoom
+  camera.zoom = Math.exp(
+    Math.log(camera.zoom) + (Raylib.getMouseWheelMove() * 0.1)
+  )
+  
+  // Clamp values
+  if (camera.rotation > 40) camera.rotation = 40
+  if (camera.rotation < -40) camera.rotation = -40
+  if (camera.zoom > 3.0) camera.zoom = 3.0
+  if (camera.zoom < 0.1) camera.zoom = 0.1
+  
+  // Reset
+  if (Raylib.isKeyDown(KeyCode.KEY_R)) {
+    camera.zoom = 1.0
+    camera.rotation = 0.0
+  }
+  
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  // World rendering (affected by camera)
+  Raylib.beginMode2D(camera)
+  
+  Raylib.drawRectangle(-6000, 320, 13000, 8000, Color.DarkGray)
+  Raylib.drawRectangleRec(player, Color.Red)
+  
+  Raylib.endMode2D()
+  
+  // UI rendering (NOT affected by camera)
+  Raylib.drawText("Camera Controls:", 10, 10, 20, Color.Black)
+  Raylib.drawText("- Arrow Keys: Move", 10, 35, 15, Color.DarkGray)
+  Raylib.drawText("- A/S: Rotate", 10, 55, 15, Color.DarkGray)
+  Raylib.drawText("- Mouse Wheel: Zoom", 10, 75, 15, Color.DarkGray)
+  Raylib.drawText("- R: Reset", 10, 95, 15, Color.DarkGray)
+  
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```

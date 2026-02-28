@@ -1,0 +1,184 @@
+---
+title: Wren Language
+description: Learn the basics of the Wren programming language and how it's used in Talon
+icon: code
+---
+
+## What is Wren?
+
+Wren is a small, fast, class-based concurrent scripting language. Talon uses Wren as its primary scripting language for game development. Learn more at [wren.io](https://wren.io).
+
+## Basic Syntax
+
+Wren is designed to be familiar if you've used languages like JavaScript, Lua, or Python. Here are the key concepts:
+
+### Variables and Constants
+
+```wren
+var screenWidth = 1000
+var screenHeight = 1000
+var title = "My Game"
+var color = Color.Yellow
+```
+
+### Classes
+
+Wren is class-based. Here's a simple class definition:
+
+```wren
+class GameScreen {
+  static Logo { 0 }
+  static Title { 1 }
+  static GamePlay { 2 }
+  static Ending { 3 }
+}
+```
+
+### Classes with Constructors
+
+More complex classes can have constructors and instance variables:
+
+```wren
+class Ball {
+  construct new() {
+    _rec = Rectangle.new(
+      SCREEN_WIDTH / 2.0 - BALL_W / 2.0,
+      SCREEN_HEIGHT - BALL_H - PADDLE_H - 40.0,
+      BALL_W,
+      BALL_H
+    )
+    _vel = Vector2.new(
+      BALL_SPEED, 
+      -BALL_SPEED
+    )
+  }
+
+  rec { _rec }
+  vel { _vel }
+  
+  draw(texture) {
+    Raylib.drawTexturePro(
+      texture, 
+      BALL_TEXTURE_DIMS, 
+      _rec, 
+      Vector2.new(0.0, 0.0),
+      0.0, 
+      Color.new(255, 255, 255, 255)
+    )
+  }
+}
+```
+
+<Note>
+  Instance variables in Wren are prefixed with an underscore (`_`). Getters are defined using the shorthand `name { _name }` syntax.
+</Note>
+
+### Functions and Closures
+
+Wren supports first-class functions:
+
+```wren
+var min = Fn.new { |a, b| 
+  if (a < b) return a
+  return b
+}
+
+var scale = min.call(width_scale, height_scale)
+```
+
+## Import System
+
+Talon provides several built-in modules that you can import:
+
+### Importing Built-in Modules
+
+```wren
+import "raylib" for Color, Raylib, Rectangle, Vector2, Camera2D, KeyCode, Texture2D
+import "math" for Math
+import "builtin" for Build
+```
+
+### Importing Local Modules
+
+You can import your own Wren files using relative paths:
+
+```wren
+import "./game" for Game
+import "./ball" for Ball, BALL_W, BALL_H
+import "./paddle" for Paddle, PADDLE_SPEED, PADDLE_W
+import "./brick" for Brick
+```
+
+<Info>
+  When importing local modules, use the `./` prefix for files in the same directory. You can export classes, variables, and constants from your modules.
+</Info>
+
+## Control Flow
+
+### Conditionals
+
+```wren
+if (currentScreen == GameScreen.Logo) {
+  framesCounter = framesCounter + 1
+} else if (currentScreen == GameScreen.Title) {
+  Raylib.drawText("TITLE SCREEN", 20, 20, 40, Color.Blue)
+}
+```
+
+### Loops
+
+```wren
+// While loops
+while (i < _bricks.count) {
+  var b = _bricks[i]
+  i = i + 1
+}
+
+// For-in loops
+for (brick in _bricks) {
+  brick.draw(_brick_texture)
+}
+```
+
+## Data Structures
+
+### Lists
+
+Wren has built-in List support:
+
+```wren
+_bricks = []
+_bricks.add(newBrick)
+_bricks.removeAt(i)
+var count = _bricks.count
+```
+
+### Working with Foreign Classes
+
+Talon provides Raylib bindings as foreign classes:
+
+```wren
+var texture = Texture2D.loadTexture("res/player.png")
+var position = Vector2.new(100.0, 200.0)
+var bounds = Rectangle.new(0.0, 0.0, 64.0, 64.0)
+var myColor = Color.new(255, 255, 255, 255)
+```
+
+## Learn More
+
+For a complete guide to the Wren language, visit:
+
+<Card title="Wren Language Documentation" icon="book" href="https://wren.io">
+  Official Wren documentation with detailed language reference and examples
+</Card>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Game Loop" icon="rotate" href="/concepts/game-loop">
+    Learn about Talon's game loop structure
+  </Card>
+  <Card title="Project Structure" icon="folder-tree" href="/concepts/project-structure">
+    Organize your Wren files and modules
+  </Card>
+</CardGroup>

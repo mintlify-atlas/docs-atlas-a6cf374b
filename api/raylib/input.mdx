@@ -1,0 +1,720 @@
+---
+title: "Input Functions"
+description: "Keyboard, mouse, gamepad, and touch input handling functions"
+---
+
+## Overview
+
+Input functions provide comprehensive input handling for keyboard, mouse, gamepad, touch, and gestures.
+
+## Keyboard Input
+
+### isKeyPressed
+
+Checks if a key has been pressed once (single trigger).
+
+<ParamField path="key" type="Number" required>
+  Key code (use KeyCode constants)
+</ParamField>
+
+**Returns:** `Boolean` - True if key was just pressed
+
+```wren
+import "raylib" for Raylib, KeyCode, Color
+
+Raylib.initWindow(800, 450, "Input Example")
+Raylib.setTargetFPS(60)
+
+var currentScreen = 0
+
+while (!Raylib.windowShouldClose()) {
+  // Single press detection - triggers once per key press
+  if (Raylib.isKeyPressed(KeyCode.KEY_ENTER)) {
+    currentScreen = currentScreen + 1
+    System.print("Screen changed to %(currentScreen)")
+  }
+  
+  if (Raylib.isKeyPressed(KeyCode.KEY_SPACE)) {
+    System.print("Jump!")
+  }
+  
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  Raylib.drawText("Press ENTER or SPACE", 200, 200, 20, Color.Black)
+  Raylib.endDrawing()
+}
+```
+
+### isKeyDown
+
+Checks if a key is being pressed (continuous detection).
+
+<ParamField path="key" type="Number" required>
+  Key code
+</ParamField>
+
+**Returns:** `Boolean` - True while key is held down
+
+```wren
+import "raylib" for Raylib, KeyCode, Rectangle
+
+var player = Rectangle.new(400, 280, 40, 40)
+var speed = 2
+
+while (!Raylib.windowShouldClose()) {
+  // Continuous movement while key is held
+  if (Raylib.isKeyDown(KeyCode.KEY_RIGHT)) {
+    player.x = player.x + speed
+  }
+  if (Raylib.isKeyDown(KeyCode.KEY_LEFT)) {
+    player.x = player.x - speed
+  }
+  if (Raylib.isKeyDown(KeyCode.KEY_UP)) {
+    player.y = player.y - speed
+  }
+  if (Raylib.isKeyDown(KeyCode.KEY_DOWN)) {
+    player.y = player.y + speed
+  }
+  
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  Raylib.drawRectangleRec(player, Color.Red)
+  Raylib.endDrawing()
+}
+```
+
+### isKeyReleased
+
+Detects when a key has been released once.
+
+<ParamField path="key" type="Number" required>
+  Key code
+</ParamField>
+
+**Returns:** `Boolean` - True if key was just released
+
+```wren
+if (Raylib.isKeyReleased(KeyCode.KEY_SPACE)) {
+  // Player released jump button
+  isCharging = false
+}
+```
+
+### isKeyUp
+
+Checks if a key is NOT being pressed.
+
+<ParamField path="key" type="Number" required>
+  Key code
+</ParamField>
+
+**Returns:** `Boolean` - True if key is not pressed
+
+### isKeyPressedRepeat
+
+Checks if a key has been pressed again (repeating key press).
+
+<ParamField path="key" type="Number" required>
+  Key code
+</ParamField>
+
+**Returns:** `Boolean` - True if key is repeating
+
+### getKeyPressed
+
+Returns the last key pressed.
+
+**Returns:** `Number` - Key code of last pressed key
+
+```wren
+var key = Raylib.getKeyPressed()
+if (key != 0) {
+  System.print("Key pressed: %(key)")
+}
+```
+
+### getCharPressed
+
+Returns the last character pressed (Unicode).
+
+**Returns:** `Number` - Unicode value of character
+
+```wren
+var char = Raylib.getCharPressed()
+if (char != 0) {
+  inputText = inputText + String.fromCodePoint(char)
+}
+```
+
+### setExitKey
+
+Sets a custom key to exit program (default is ESC).
+
+<ParamField path="key" type="Number" required>
+  Key code (0 to disable)
+</ParamField>
+
+```wren
+// Disable ESC key exit
+Raylib.setExitKey(0)
+
+// Or set custom exit key
+Raylib.setExitKey(KeyCode.KEY_Q)
+```
+
+## Mouse Input
+
+### isMouseButtonPressed
+
+Checks if a mouse button has been pressed once.
+
+<ParamField path="button" type="Number" required>
+  Mouse button (0=LEFT, 1=RIGHT, 2=MIDDLE)
+</ParamField>
+
+**Returns:** `Boolean` - True if button was just pressed
+
+```wren
+if (Raylib.isMouseButtonPressed(0)) {  // Left click
+  System.print("Left mouse button clicked!")
+}
+```
+
+### isMouseButtonDown
+
+Checks if a mouse button is being pressed.
+
+<ParamField path="button" type="Number" required>
+  Mouse button
+</ParamField>
+
+**Returns:** `Boolean` - True while button is held
+
+```wren
+if (Raylib.isMouseButtonDown(0)) {
+  // Drag operation
+  isDragging = true
+}
+```
+
+### isMouseButtonReleased
+
+Detects when a mouse button has been released.
+
+<ParamField path="button" type="Number" required>
+  Mouse button
+</ParamField>
+
+**Returns:** `Boolean` - True if button was just released
+
+### isMouseButtonUp
+
+Checks if a mouse button is NOT being pressed.
+
+<ParamField path="button" type="Number" required>
+  Mouse button
+</ParamField>
+
+**Returns:** `Boolean` - True if button is not pressed
+
+### getMouseX
+
+Returns mouse X position.
+
+**Returns:** `Number` - Mouse X coordinate
+
+```wren
+var mouseX = Raylib.getMouseX()
+```
+
+### getMouseY
+
+Returns mouse Y position.
+
+**Returns:** `Number` - Mouse Y coordinate
+
+```wren
+var mouseY = Raylib.getMouseY()
+```
+
+### getMousePosition
+
+Returns mouse position as Vector2.
+
+**Returns:** `Vector2` - Mouse position
+
+```wren
+import "raylib" for Raylib, Vector2, Rectangle, Color
+
+var button = Rectangle.new(100, 100, 200, 50)
+
+while (!Raylib.windowShouldClose()) {
+  var mousePos = Raylib.getMousePosition()
+  
+  var isHovering = Raylib.checkCollisionPointRec(mousePos, button)
+  var buttonColor = isHovering ? Color.Red : Color.Gray
+  
+  if (isHovering && Raylib.isMouseButtonPressed(0)) {
+    System.print("Button clicked!")
+  }
+  
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  Raylib.drawRectangleRec(button, buttonColor)
+  Raylib.drawText("Click Me", 140, 115, 20, Color.White)
+  Raylib.endDrawing()
+}
+```
+
+### getMouseDelta
+
+Returns mouse delta between frames.
+
+**Returns:** `Vector2` - Mouse movement delta
+
+```wren
+var delta = Raylib.getMouseDelta()
+camera.rotation = camera.rotation + (delta.x * 0.1)
+```
+
+### setMousePosition
+
+Sets mouse position.
+
+<ParamField path="x" type="Number" required>
+  X position
+</ParamField>
+
+<ParamField path="y" type="Number" required>
+  Y position
+</ParamField>
+
+```wren
+// Center mouse
+Raylib.setMousePosition(400, 225)
+```
+
+### setMouseOffset
+
+Sets mouse offset.
+
+<ParamField path="offsetX" type="Number" required>
+  X offset
+</ParamField>
+
+<ParamField path="offsetY" type="Number" required>
+  Y offset
+</ParamField>
+
+### setMouseScale
+
+Sets mouse scaling.
+
+<ParamField path="scaleX" type="Number" required>
+  X scale
+</ParamField>
+
+<ParamField path="scaleY" type="Number" required>
+  Y scale
+</ParamField>
+
+### getMouseWheelMove
+
+Returns mouse wheel movement Y.
+
+**Returns:** `Number` - Wheel movement (-1, 0, 1)
+
+```wren
+import "math" for Math
+
+var zoom = 1.0
+
+while (!Raylib.windowShouldClose()) {
+  // Zoom with mouse wheel
+  var wheel = Raylib.getMouseWheelMove()
+  zoom = Math.exp(Math.log(zoom) + (wheel * 0.1))
+  
+  if (zoom > 3.0) zoom = 3.0
+  if (zoom < 0.1) zoom = 0.1
+  
+  camera.zoom = zoom
+}
+```
+
+### getMouseWheelMoveV
+
+Returns mouse wheel movement as Vector2.
+
+**Returns:** `Vector2` - Wheel movement (x, y)
+
+### setMouseCursor
+
+Sets mouse cursor style.
+
+<ParamField path="cursor" type="Number" required>
+  Cursor type (0=DEFAULT, 1=ARROW, 2=IBEAM, 3=CROSSHAIR, 4=POINTING_HAND, etc.)
+</ParamField>
+
+```wren
+// Show hand cursor when hovering button
+if (isHovering) {
+  Raylib.setMouseCursor(4)  // POINTING_HAND
+} else {
+  Raylib.setMouseCursor(0)  // DEFAULT
+}
+```
+
+## Gamepad Input
+
+### isGamepadAvailable
+
+Checks if a gamepad is available.
+
+<ParamField path="gamepad" type="Number" required>
+  Gamepad number (0-3)
+</ParamField>
+
+**Returns:** `Boolean` - True if gamepad is connected
+
+```wren
+if (Raylib.isGamepadAvailable(0)) {
+  System.print("Gamepad connected")
+}
+```
+
+### getGamepadName
+
+Returns gamepad internal name.
+
+<ParamField path="gamepad" type="Number" required>
+  Gamepad number
+</ParamField>
+
+**Returns:** `String` - Gamepad name
+
+```wren
+var name = Raylib.getGamepadName(0)
+System.print("Using: %(name)")
+```
+
+### isGamepadButtonPressed
+
+Checks if a gamepad button has been pressed once.
+
+<ParamField path="gamepad" type="Number" required>
+  Gamepad number
+</ParamField>
+
+<ParamField path="button" type="Number" required>
+  Button code
+</ParamField>
+
+**Returns:** `Boolean` - True if button was just pressed
+
+```wren
+if (Raylib.isGamepadButtonPressed(0, GamepadButton.BUTTON_A)) {
+  System.print("A button pressed!")
+}
+```
+
+### isGamepadButtonDown
+
+Checks if a gamepad button is being pressed.
+
+<ParamField path="gamepad" type="Number" required>
+  Gamepad number
+</ParamField>
+
+<ParamField path="button" type="Number" required>
+  Button code
+</ParamField>
+
+**Returns:** `Boolean` - True while button is held
+
+### isGamepadButtonReleased
+
+Detects when a gamepad button has been released.
+
+<ParamField path="gamepad" type="Number" required>
+  Gamepad number
+</ParamField>
+
+<ParamField path="button" type="Number" required>
+  Button code
+</ParamField>
+
+**Returns:** `Boolean` - True if button was just released
+
+### isGamepadButtonUp
+
+Checks if a gamepad button is NOT being pressed.
+
+<ParamField path="gamepad" type="Number" required>
+  Gamepad number
+</ParamField>
+
+<ParamField path="button" type="Number" required>
+  Button code
+</ParamField>
+
+**Returns:** `Boolean` - True if button is not pressed
+
+### getGamepadButtonPressed
+
+Returns the last gamepad button pressed.
+
+**Returns:** `Number` - Button code
+
+### getGamepadAxisCount
+
+Returns gamepad axis count.
+
+<ParamField path="gamepad" type="Number" required>
+  Gamepad number
+</ParamField>
+
+**Returns:** `Number` - Number of axes
+
+### getGamepadAxisMovement
+
+Returns axis movement value for a gamepad axis.
+
+<ParamField path="gamepad" type="Number" required>
+  Gamepad number
+</ParamField>
+
+<ParamField path="axis" type="Number" required>
+  Axis index
+</ParamField>
+
+**Returns:** `Number` - Axis value (-1.0 to 1.0)
+
+```wren
+var gamepad = 0
+
+// Left stick X axis (typically axis 0)
+var moveX = Raylib.getGamepadAxisMovement(gamepad, 0)
+if (moveX > 0.1 || moveX < -0.1) {
+  player.x = player.x + (moveX * speed)
+}
+
+// Left stick Y axis (typically axis 1)
+var moveY = Raylib.getGamepadAxisMovement(gamepad, 1)
+if (moveY > 0.1 || moveY < -0.1) {
+  player.y = player.y + (moveY * speed)
+}
+```
+
+### setGamepadVibration
+
+Sets gamepad vibration.
+
+<ParamField path="gamepad" type="Number" required>
+  Gamepad number
+</ParamField>
+
+<ParamField path="leftMotor" type="Number" required>
+  Left motor intensity (0.0-1.0)
+</ParamField>
+
+<ParamField path="rightMotor" type="Number" required>
+  Right motor intensity (0.0-1.0)
+</ParamField>
+
+<ParamField path="duration" type="Number" required>
+  Duration in seconds
+</ParamField>
+
+```wren
+// Light rumble
+Raylib.setGamepadVibration(0, 0.5, 0.5, 0.2)
+
+// Strong rumble
+Raylib.setGamepadVibration(0, 1.0, 1.0, 0.5)
+```
+
+## Touch Input
+
+### getTouchX
+
+Returns touch position X.
+
+**Returns:** `Number` - Touch X coordinate
+
+### getTouchY
+
+Returns touch position Y.
+
+**Returns:** `Number` - Touch Y coordinate
+
+### getTouchPosition
+
+Returns touch position for a touch point.
+
+<ParamField path="index" type="Number" required>
+  Touch point index
+</ParamField>
+
+**Returns:** `Vector2` - Touch position
+
+```wren
+var touch = Raylib.getTouchPosition(0)
+if (Raylib.checkCollisionPointRec(touch, button)) {
+  System.print("Button touched!")
+}
+```
+
+### getTouchPointId
+
+Returns touch point identifier for given index.
+
+<ParamField path="index" type="Number" required>
+  Touch point index
+</ParamField>
+
+**Returns:** `Number` - Touch point ID
+
+### getTouchPointCount
+
+Returns number of touch points.
+
+**Returns:** `Number` - Touch count
+
+```wren
+var touchCount = Raylib.getTouchPointCount()
+if (touchCount > 1) {
+  System.print("Multi-touch detected!")
+}
+```
+
+## Gestures
+
+### setGesturesEnabled
+
+Enables a set of gestures using flags.
+
+<ParamField path="flags" type="Number" required>
+  Gesture flags (bitwise OR)
+</ParamField>
+
+```wren
+Raylib.setGesturesEnabled(GestureType.GESTURE_TAP | GestureType.GESTURE_SWIPE)
+```
+
+### isGestureDetected
+
+Checks if a gesture has been detected.
+
+<ParamField path="gesture" type="Number" required>
+  Gesture type
+</ParamField>
+
+**Returns:** `Boolean` - True if gesture detected
+
+```wren
+if (Raylib.isGestureDetected(GestureType.GESTURE_SWIPE_RIGHT)) {
+  currentScreen = currentScreen + 1
+}
+```
+
+### getGestureDetected
+
+Returns latest detected gesture.
+
+**Returns:** `Number` - Gesture type
+
+### getGestureHoldDuration
+
+Returns gesture hold time in seconds.
+
+**Returns:** `Number` - Duration in seconds
+
+### getGestureDragVector
+
+Returns gesture drag vector.
+
+**Returns:** `Vector2` - Drag vector
+
+### getGestureDragAngle
+
+Returns gesture drag angle.
+
+**Returns:** `Number` - Angle in degrees
+
+### getGesturePinchVector
+
+Returns gesture pinch delta.
+
+**Returns:** `Vector2` - Pinch vector
+
+### getGesturePinchAngle
+
+Returns gesture pinch angle.
+
+**Returns:** `Number` - Angle in degrees
+
+## Complete Input Example
+
+```wren
+import "raylib" for Raylib, KeyCode, Color, Rectangle, Vector2
+
+var screenWidth = 800
+var screenHeight = 450
+
+Raylib.initWindow(screenWidth, screenHeight, "Input Example")
+Raylib.setTargetFPS(60)
+
+var player = Rectangle.new(400, 280, 40, 40)
+var speed = 3
+
+while (!Raylib.windowShouldClose()) {
+  // Keyboard movement
+  if (Raylib.isKeyDown(KeyCode.KEY_RIGHT)) player.x = player.x + speed
+  if (Raylib.isKeyDown(KeyCode.KEY_LEFT)) player.x = player.x - speed
+  if (Raylib.isKeyDown(KeyCode.KEY_UP)) player.y = player.y - speed
+  if (Raylib.isKeyDown(KeyCode.KEY_DOWN)) player.y = player.y + speed
+  
+  // Mouse click to teleport
+  if (Raylib.isMouseButtonPressed(0)) {
+    var mousePos = Raylib.getMousePosition()
+    player.x = mousePos.x - 20
+    player.y = mousePos.y - 20
+  }
+  
+  // Gamepad support
+  if (Raylib.isGamepadAvailable(0)) {
+    var moveX = Raylib.getGamepadAxisMovement(0, 0)
+    var moveY = Raylib.getGamepadAxisMovement(0, 1)
+    
+    if (moveX > 0.1 || moveX < -0.1) player.x = player.x + (moveX * speed)
+    if (moveY > 0.1 || moveY < -0.1) player.y = player.y + (moveY * speed)
+  }
+  
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  Raylib.drawRectangleRec(player, Color.Red)
+  Raylib.drawText("Move: Arrow Keys or Gamepad", 10, 10, 20, Color.Black)
+  Raylib.drawText("Teleport: Left Click", 10, 40, 20, Color.Black)
+  
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+## Best Practices
+
+<Tip>
+  Use `isKeyPressed()` for actions that should trigger once (jumping, menu navigation).
+  
+  Use `isKeyDown()` for continuous actions (movement, holding a button).
+</Tip>
+
+<Note>
+  For responsive controls, always check input at the start of your game loop before updating game logic.
+</Note>
+
+<Warning>
+  Gamepad axis values include deadzone. Values between -0.1 and 0.1 are typically considered neutral.
+</Warning>

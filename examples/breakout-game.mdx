@@ -1,0 +1,505 @@
+---
+title: Breakout Game Example
+description: Build a complete breakout game with modular architecture, texture loading, and advanced game mechanics
+---
+
+This example demonstrates how to build a complete breakout-style game using a modular, multi-file architecture. You'll learn about project organization, texture loading, collision detection, and game state management in a real-world game project.
+
+## Overview
+
+The breakout game features:
+- Modular file structure with separate components
+- Texture loading for sprites
+- Paddle and ball physics
+- Brick collision and destruction
+- Score system with multipliers
+- Camera shake effects
+- Game states (Start, Playing, Won, Over)
+
+## Project Structure
+
+```
+breakout/
+├── main.wren          # Entry point and render texture
+├── game.wren          # Main game logic and state management
+├── ball.wren          # Ball entity and physics
+├── paddle.wren        # Paddle entity and controls
+├── brick.wren         # Brick entity and grid generation
+├── particle.wren      # Particle system (for effects)
+├── score.wren         # Score indicator animations
+├── utils.wren         # Shared constants
+└── res/
+    ├── tennis.png     # Ball sprite
+    ├── paddle.png     # Paddle sprite
+    └── brick.png      # Brick sprite
+```
+
+## Code Files
+
+<Tabs>
+  <Tab title="main.wren">
+    ```wren
+    import "raylib" for Color, Raylib, Rectangle, Vector2, Camera2D, KeyCode, Texture2D
+    import "math" for Math
+    import "./game" for Game
+
+    var width = 600
+    var height = 800
+    var title = "Sample"
+
+    Raylib.initWindow(width, height, title)
+
+    var min = Fn.new { |a, b| 
+      if (a < b) return a
+      return b
+    }
+
+    var game = Game.new()
+
+    Raylib.setTargetFPS(60)
+
+    var target = Raylib.loadRenderTexture(width, height)
+
+    while (!Raylib.windowShouldClose()) {
+      game.update()
+
+      var width_scale = Raylib.getScreenWidth() / width
+      var height_scale = Raylib.getScreenHeight() / height
+      var scale = min.call(width_scale, height_scale)
+
+      // Render to texture for scaling
+      Raylib.beginTextureMode(target)
+      game.draw()
+      Raylib.endTextureMode(target)
+
+      Raylib.beginDrawing()
+      Raylib.clearBackground(Color.new(20, 20, 20, 255))
+
+      // Draw the render texture to screen
+      Raylib.drawTexturePro(
+        target.texture,
+        Rectangle.new(0.0, 0.0, target.texture.width, target.texture.height),
+        Rectangle.new(0.0, 0.0, target.texture.width, target.texture.height),
+        Vector2.new(0.0, 0.0),
+        0.0,
+        Color.new(255, 255, 255, 255)
+      )
+
+      Raylib.endDrawing()
+    }
+
+    Raylib.clearBackground(Color.Gray)
+    Raylib.unloadRenderTexture(target)
+    Raylib.closeWindow()
+    ```
+
+    **Key Features:**
+    - Uses a render texture for resolution-independent rendering
+    - Calculates scaling to maintain aspect ratio
+    - Separates game logic (Game class) from rendering setup
+  </Tab>
+
+  <Tab title="game.wren">
+    ```wren
+    import "raylib" for Color, Raylib, Rectangle, Vector2, Camera2D, KeyCode, Texture2D
+    import "math" for Math
+    import "./brick" for Brick, BRICK_W
+    import "./ball" for Ball, BALL_W, BALL_H
+    import "./paddle" for Paddle, PADDLE_SPEED, PADDLE_W
+    import "./score" for ScoreIndicator, SCORE_INC_Y, SCORE_PROG_INC_Y
+    import "./utils" for SCREEN_HEIGHT, SCREEN_WIDTH
+
+    var CAMERA_SHAKE_DEC = 0.8 
+    var CAMERA_SHAKE_TTL = 10.0
+
+    class GameStatus {
+      static Start { "Start" }
+      static Playing { "Playing" }
+      static Won { "Won" }
+      static Over { "Over" }
+    }
+
+    class Game {
+      construct new() {
+        _brick_texture = Texture2D.loadTexture("res/brick.png")
+        _ball_texture = Texture2D.loadTexture("res/tennis.png")
+        _paddle_texture = Texture2D.loadTexture("res/paddle.png")
+        _status = GameStatus.Start
+        _bricks = Brick.new_bricks(5, 10)
+        _ball = Ball.new()
+        _paddle = Paddle.new()
+        _camera_shake_ttl = 0.0
+        _particle_instances = []
+        _score = 0.0
+        _camera = Camera2D.new(
+          Vector2.new(0.0, 0.0), 
+          Vector2.new(0.0, 0.0),
+          0.0, 
+          1.0
+        )
+        _score_indicators = []
+        _score_multiplier = 1
+      }
+
+      update() {
+        if (_status == GameStatus.Start) {
+          update_start()
+        } else if (_status == GameStatus.Playing) {
+          update_playing()
+        } else if (_status == GameStatus.Won) {
+          update_won()
+        } else if (_status == GameStatus.Over) {
+          update_over()
+        }
+      }
+
+      update_playing() {
+        var dt = Raylib.getFrameTime()
+
+        // Check brick collisions
+        var i = 0 
+        while (i < _bricks.count) {
+          var b = _bricks[i]
+          var collided = Raylib.checkCollisionRecs(_ball.rec, b.rec)
+
+          if (!collided) {
+            i = i + 1 
+            continue
+          }
+
+          _ball.apply_collission(b.rec)
+          _camera_shake_ttl = CAMERA_SHAKE_TTL
+
+          _score_indicators.add(
+            ScoreIndicator.new(_score_multiplier, b.rec.x + BRICK_W / 2.0, b.rec.y)
+          )
+
+          _score = _score + 1 * _score_multiplier 
+          _score_multiplier = _score_multiplier + 1
+
+          _bricks.removeAt(i)
+
+          if (_bricks.count == 0) {
+            _status = GameStatus.Won
+            return
+          }
+        }
+
+        // Paddle collision
+        if (Raylib.checkCollisionRecs(_ball.rec, _paddle.rec)) {
+          _score_multiplier = 1 
+
+          if (_ball.rec.x + BALL_W / 2.0 < _paddle.rec.x + PADDLE_W / 2.0) {
+            _ball.vel.x = -PADDLE_SPEED
+          } else {
+            _ball.vel.x = PADDLE_SPEED
+          }
+          _ball.vel.y = _ball.vel.y * -1.0 
+          _ball.rec.y = _ball.rec.y - BALL_H
+        }
+
+        // Update ball position
+        _ball.rec.x = _ball.rec.x + _ball.vel.x * dt 
+        _ball.rec.y = _ball.rec.y + _ball.vel.y * dt 
+
+        // Wall collisions
+        var c_left = _ball.rec.x < 0.0
+        var c_up = _ball.rec.y < 0.0
+        var c_right = _ball.rec.x + _ball.rec.width > SCREEN_WIDTH
+        var c_down = _ball.rec.y + _ball.rec.height > SCREEN_HEIGHT
+
+        if (c_left || c_right) _ball.vel.x = _ball.vel.x * -1.0
+        if (c_up) _ball.vel.y = _ball.vel.y * -1.0
+        if (c_down) {
+          _status = GameStatus.Over
+          return
+        }
+
+        // Paddle controls
+        if (Raylib.isKeyDown(KeyCode.KEY_LEFT)) {
+          _paddle.rec.x = _paddle.rec.x - PADDLE_SPEED * dt
+        }
+        if (Raylib.isKeyDown(KeyCode.KEY_RIGHT)) {
+          _paddle.rec.x = _paddle.rec.x + PADDLE_SPEED * dt
+        }
+      }
+
+      draw_playing() {
+        _camera_shake_ttl = Math.max(0.0, _camera_shake_ttl - CAMERA_SHAKE_DEC)
+
+        _camera.beginMode2D()
+        Raylib.clearBackground(Color.new(0, 0, 0, 255))
+
+        for (brick in _bricks) {
+          brick.draw(_brick_texture)
+        }
+
+        _paddle.draw(_paddle_texture)
+        _ball.draw(_ball_texture)
+
+        _camera.endMode2D()
+
+        var fps_text = "Score %(_score)"
+        Raylib.drawText(fps_text, 12, 12, 24, Color.new(255, 255, 255, 255))
+      }
+    }
+    ```
+
+    **Key Features:**
+    - State machine for game flow
+    - Collision detection for ball-brick and ball-paddle
+    - Score multiplier system (resets on paddle hit)
+    - Camera shake effect on brick destruction
+    - Delta time for frame-independent movement
+  </Tab>
+
+  <Tab title="ball.wren">
+    ```wren
+    import "raylib" for Raylib, Rectangle, Vector2, Color
+    import "./paddle" for PADDLE_H
+    import "./utils" for SCREEN_HEIGHT, SCREEN_WIDTH
+
+    var BALL_W = 16.0
+    var BALL_H = 16.0
+    var BALL_SPEED = 300.0
+    var BALL_TEXTURE_DIMS = Rectangle.new(0.0, 0.0, 16.0, 16.0)
+
+    class Ball {
+      construct new() {
+        _rec = Rectangle.new(
+          SCREEN_WIDTH / 2.0 - BALL_W / 2.0,
+          SCREEN_HEIGHT - BALL_H - PADDLE_H - 40.0,
+          BALL_W,
+          BALL_H
+        )
+        _vel = Vector2.new(BALL_SPEED, -BALL_SPEED)
+      }
+
+      rec { _rec }
+      vel { _vel }
+
+      draw(texture) {
+        Raylib.drawTexturePro(
+          texture, 
+          BALL_TEXTURE_DIMS, 
+          _rec, 
+          Vector2.new(0.0, 0.0),
+          0.0, 
+          Color.new(255, 255, 255, 255)
+        )
+      }
+
+      apply_collission(rec) {
+        var prev_x = _rec.x - _vel.x
+        var prev_y = _rec.y - _vel.y
+
+        // Determine collision side
+        if (prev_y + _rec.height <= rec.y) {
+          _vel.y = _vel.y * -1.0
+        } else if (prev_y >= rec.y + rec.height) {
+          _vel.y = _vel.y * -1.0
+        } else if (prev_x + _rec.width <= rec.x) {
+          _vel.x = _vel.x * -1.0
+        } else if (prev_x >= rec.x + rec.width) {
+          _vel.x = _vel.x * -1.0
+        } else {
+          _vel.y = _vel.y * -1.0
+        }
+      }
+    }
+    ```
+
+    **Key Features:**
+    - Simple ball physics with constant velocity
+    - Collision response based on previous position
+    - Texture-based rendering
+  </Tab>
+
+  <Tab title="paddle.wren">
+    ```wren
+    import "raylib" for Raylib, Rectangle, Vector2, Color
+
+    var PADDLE_W = 128.0
+    var PADDLE_H = 16.0
+    var PADDLE_SPEED = 500.0
+    var PADDLE_TEXTURE_DIMS = Rectangle.new(0.0, 0.0, 64.0, 16.0)
+
+    var SCREEN_WIDTH = 600
+    var SCREEN_HEIGHT = 800
+
+    class Paddle {
+      construct new() {
+        _rec = Rectangle.new(
+          SCREEN_WIDTH / 2.0 - PADDLE_W / 2.0,
+          SCREEN_HEIGHT - PADDLE_H - 20.0, 
+          PADDLE_W,
+          PADDLE_H
+        )
+      }
+
+      rec { _rec }
+
+      draw(texture) {
+        Raylib.drawTexturePro(
+          texture, 
+          PADDLE_TEXTURE_DIMS, 
+          _rec, 
+          Vector2.new(0.0, 0.0),
+          0.0, 
+          Color.new(255, 255, 255, 255)
+        )
+      }
+    }
+    ```
+  </Tab>
+
+  <Tab title="brick.wren">
+    ```wren
+    import "raylib" for Raylib, Rectangle, Vector2, Color
+
+    var BRICK_W = 48.0 
+    var BRICK_H = 16.0
+    var BRICK_GAP = 22.0 
+    var BRICK_MARGIN = 32.0
+    var BRICK_TEXTURE_DIMS = Rectangle.new(0.0, 0.0, 48.0, 16.0)
+
+    class Brick {
+      construct new(x, y) {
+        _rec = Rectangle.new(x, y, BRICK_W, BRICK_H)
+      }
+
+      rec { _rec }
+
+      draw(texture) {
+        Raylib.drawTexturePro(
+          texture,
+          BRICK_TEXTURE_DIMS, 
+          _rec, 
+          Vector2.new(0.0, 0.0),
+          0.0, 
+          Color.new(255, 255, 255, 255)
+        )
+      }
+
+      static new_bricks(rows, cols) {
+        var list = []
+        var i = 0
+
+        while (i < rows) {
+          var j = 0
+          while (j < cols) {
+            var bx = j * BRICK_W + j + 1.0 * BRICK_GAP + BRICK_MARGIN
+            var by = i * BRICK_H + i + 1.0 * BRICK_GAP + BRICK_MARGIN
+            list.add(Brick.new(bx, by))
+            j = j + 1
+          }
+          i = i + 1
+        }
+        return list
+      }
+    }
+    ```
+
+    **Key Features:**
+    - Static factory method for grid generation
+    - Configurable spacing and margins
+    - Texture mapping for rendering
+  </Tab>
+
+  <Tab title="utils.wren">
+    ```wren
+    var SCREEN_WIDTH = 600
+    var SCREEN_HEIGHT = 800
+    ```
+
+    **Purpose:**
+    - Centralized constants shared across modules
+  </Tab>
+</Tabs>
+
+## Key Concepts
+
+### 1. Modular Architecture
+
+The game is split into separate files, each responsible for a specific component:
+- **Separation of concerns**: Each file handles one aspect of the game
+- **Reusability**: Components can be easily reused or modified
+- **Maintainability**: Changes to one component don't affect others
+
+### 2. Render Textures
+
+```wren
+var target = Raylib.loadRenderTexture(width, height)
+Raylib.beginTextureMode(target)
+game.draw()
+Raylib.endTextureMode(target)
+```
+
+Render textures allow you to draw to an offscreen buffer, enabling:
+- Resolution-independent rendering
+- Post-processing effects
+- Scaling without quality loss
+
+### 3. Delta Time Physics
+
+```wren
+var dt = Raylib.getFrameTime()
+_ball.rec.x = _ball.rec.x + _ball.vel.x * dt
+```
+
+Multiplying movement by delta time ensures consistent speed regardless of frame rate.
+
+### 4. Collision Detection
+
+```wren
+apply_collission(rec) {
+  var prev_x = _rec.x - _vel.x
+  var prev_y = _rec.y - _vel.y
+
+  // Determine which side was hit
+  if (prev_y + _rec.height <= rec.y) {
+    _vel.y = _vel.y * -1.0
+  }
+}
+```
+
+Using previous position to determine collision direction ensures accurate bounce behavior.
+
+### 5. Score Multiplier System
+
+```wren
+_score = _score + 1 * _score_multiplier 
+_score_multiplier = _score_multiplier + 1
+
+// Reset on paddle hit
+if (Raylib.checkCollisionRecs(_ball.rec, _paddle.rec)) {
+  _score_multiplier = 1
+}
+```
+
+Encourages keeping the ball in play without hitting the paddle by increasing score for consecutive brick hits.
+
+## Game Mechanics
+
+- **Controls**: Left/Right arrow keys to move paddle
+- **Objective**: Destroy all bricks without letting the ball fall
+- **Scoring**: Each brick destroyed adds points multiplied by the current combo
+- **Combo System**: Combo increases with each brick hit, resets when ball hits paddle
+- **Win Condition**: All bricks destroyed
+- **Lose Condition**: Ball falls below the paddle
+
+## Enhancements to Try
+
+1. **Power-ups**: Add special bricks that drop power-ups (wider paddle, slower ball)
+2. **Multiple balls**: Split the ball when hitting special bricks
+3. **Brick durability**: Some bricks require multiple hits
+4. **Particle effects**: Add visual effects when bricks break
+5. **Level progression**: Load different brick patterns
+6. **Sound effects**: Add audio for collisions and events
+7. **High score persistence**: Save and load high scores
+
+## Related Examples
+
+- [Basic Window](/examples/basic-window) - Simple window and state management
+- [Asteroid Game](/examples/asteroid-game) - Single-file game structure
+- [Camera Example](/examples/camera-example) - Camera controls and effects

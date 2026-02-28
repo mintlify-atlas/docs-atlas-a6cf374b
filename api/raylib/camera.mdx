@@ -1,0 +1,489 @@
+---
+title: "Camera Functions"
+description: "2D and 3D camera functions for viewport transformation and coordinate conversion"
+---
+
+## Overview
+
+Camera functions enable viewport transformation for 2D and 3D rendering, as well as coordinate space conversions.
+
+## 2D Camera
+
+### Camera2D Type
+
+The Camera2D class defines a 2D camera with offset, target, rotation, and zoom.
+
+```wren
+import "raylib" for Camera2D, Vector2
+
+var camera = Camera2D.new(
+  Vector2.new(400, 225),   // offset (screen center)
+  Vector2.new(0, 0),       // target (world position to look at)
+  1.0,                     // zoom
+  0.0                      // rotation in degrees
+)
+```
+
+### Camera2D Properties
+
+#### target
+
+Gets or sets the camera target position in world space.
+
+**Type:** `Vector2`
+
+```wren
+import "raylib" for Raylib, Camera2D, Vector2, Rectangle, Color, KeyCode
+
+var screenWidth = 800
+var screenHeight = 450
+
+Raylib.initWindow(screenWidth, screenHeight, "2D Camera")
+
+var player = Rectangle.new(400, 280, 40, 40)
+var camera = Camera2D.new(
+  Vector2.new(screenWidth / 2.0, screenHeight / 2.0),
+  Vector2.new(player.x + 20.0, player.y + 20.0),
+  1.0,
+  0.0
+)
+
+var speed = 2
+
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+  // Update player position
+  if (Raylib.isKeyDown(KeyCode.KEY_RIGHT)) player.x = player.x + speed
+  if (Raylib.isKeyDown(KeyCode.KEY_LEFT)) player.x = player.x - speed
+  if (Raylib.isKeyDown(KeyCode.KEY_UP)) player.y = player.y - speed
+  if (Raylib.isKeyDown(KeyCode.KEY_DOWN)) player.y = player.y + speed
+  
+  // Camera follows player
+  camera.target = Vector2.new(player.x + 20, player.y + 20)
+  
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  Raylib.beginMode2D(camera)
+  
+  // Draw world
+  Raylib.drawRectangle(-6000, 320, 13000, 8000, Color.DarkGray)
+  Raylib.drawRectangleRec(player, Color.Red)
+  
+  Raylib.endMode2D()
+  
+  // Draw UI (screen space)
+  Raylib.drawText("2D Camera Follow", 10, 10, 20, Color.Black)
+  
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+#### rotation
+
+Gets or sets the camera rotation in degrees.
+
+**Type:** `Number`
+
+```wren
+import "math" for Math
+
+var camera = Camera2D.new(
+  Vector2.new(400, 225),
+  Vector2.new(0, 0),
+  1.0,
+  0.0
+)
+
+while (!Raylib.windowShouldClose()) {
+  // Rotate camera with A/S keys
+  if (Raylib.isKeyDown(KeyCode.KEY_A)) {
+    camera.rotation = camera.rotation - 1
+  } else if (Raylib.isKeyDown(KeyCode.KEY_S)) {
+    camera.rotation = camera.rotation + 1
+  }
+  
+  // Clamp rotation
+  if (camera.rotation > 40) camera.rotation = 40
+  if (camera.rotation < -40) camera.rotation = -40
+  
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  Raylib.beginMode2D(camera)
+  // Draw rotated world
+  Raylib.endMode2D()
+  
+  Raylib.endDrawing()
+}
+```
+
+#### zoom
+
+Gets or sets the camera zoom level.
+
+**Type:** `Number` (1.0 = normal, greater than 1.0 = zoomed in, less than 1.0 = zoomed out)
+
+```wren
+import "math" for Math
+
+var camera = Camera2D.new(
+  Vector2.new(400, 225),
+  Vector2.new(0, 0),
+  1.0,
+  0.0
+)
+
+while (!Raylib.windowShouldClose()) {
+  // Zoom with mouse wheel
+  var wheel = Raylib.getMouseWheelMove()
+  camera.zoom = Math.exp(Math.log(camera.zoom) + (wheel * 0.1))
+  
+  // Clamp zoom
+  if (camera.zoom > 3.0) camera.zoom = 3.0
+  if (camera.zoom < 0.1) camera.zoom = 0.1
+  
+  // Reset with R key
+  if (Raylib.isKeyDown(KeyCode.KEY_R)) {
+    camera.zoom = 1.0
+    camera.rotation = 0.0
+  }
+  
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  Raylib.beginMode2D(camera)
+  // Draw world with zoom
+  Raylib.endMode2D()
+  
+  Raylib.drawText("Zoom: %(camera.zoom)", 10, 10, 20, Color.Black)
+  
+  Raylib.endDrawing()
+}
+```
+
+### Camera2D Methods
+
+#### beginMode2D
+
+Initializes 2D mode with custom camera (must be called from Raylib class).
+
+```wren
+Raylib.beginMode2D(camera)
+// Draw world-space objects
+Raylib.endMode2D()
+```
+
+#### endMode2D
+
+Ends 2D mode (must be called from Raylib class).
+
+```wren
+Raylib.endMode2D()
+```
+
+## 2D Coordinate Conversion
+
+### getWorldToScreen2D
+
+Converts a 2D world position to screen space.
+
+<ParamField path="position" type="Vector2" required>
+  World position
+</ParamField>
+
+<ParamField path="camera" type="Camera2D" required>
+  Camera to use for conversion
+</ParamField>
+
+**Returns:** `Vector2` - Screen position
+
+```wren
+// Get screen position of a world object
+var worldPos = Vector2.new(100, 100)
+var screenPos = Raylib.getWorldToScreen2D(worldPos, camera)
+
+// Draw UI element at world position
+Raylib.drawText("!", screenPos.x, screenPos.y, 20, Color.Red)
+```
+
+### getScreenToWorld2D
+
+Converts a 2D screen position to world space.
+
+<ParamField path="position" type="Vector2" required>
+  Screen position
+</ParamField>
+
+<ParamField path="camera" type="Camera2D" required>
+  Camera to use for conversion
+</ParamField>
+
+**Returns:** `Vector2` - World position
+
+```wren
+// Get world position of mouse click
+var mousePos = Raylib.getMousePosition()
+var worldPos = Raylib.getScreenToWorld2D(mousePos, camera)
+
+if (Raylib.isMouseButtonPressed(0)) {
+  System.print("Clicked world position: (%(worldPos.x), %(worldPos.y))")
+  spawnParticle(worldPos)
+}
+```
+
+### getCameraMatrix2D
+
+Returns camera 2D transform matrix.
+
+<ParamField path="camera" type="Camera2D" required>
+  Camera
+</ParamField>
+
+**Returns:** `Matrix` - Camera transform matrix
+
+```wren
+var matrix = Raylib.getCameraMatrix2D(camera)
+```
+
+## 3D Camera Functions
+
+### beginMode3D
+
+Initializes 3D mode with custom camera.
+
+<ParamField path="camera" type="Camera3D" required>
+  3D camera
+</ParamField>
+
+```wren
+Raylib.beginMode3D(camera3D)
+// Draw 3D objects
+Raylib.endMode3D()
+```
+
+### endMode3D
+
+Ends 3D mode.
+
+### getWorldToScreen
+
+Converts 3D world position to screen space.
+
+<ParamField path="position" type="Vector3" required>
+  World position
+</ParamField>
+
+<ParamField path="camera" type="Camera3D" required>
+  Camera
+</ParamField>
+
+**Returns:** `Vector2` - Screen position
+
+### getScreenToWorldRay
+
+Returns a ray from screen position into 3D world.
+
+<ParamField path="position" type="Vector2" required>
+  Screen position
+</ParamField>
+
+<ParamField path="camera" type="Camera3D" required>
+  Camera
+</ParamField>
+
+**Returns:** `Ray` - Ray from camera through screen point
+
+### getCameraMatrix
+
+Returns camera 3D transform matrix.
+
+<ParamField path="camera" type="Camera3D" required>
+  Camera
+</ParamField>
+
+**Returns:** `Matrix` - Camera transform matrix
+
+## Camera Update (3D)
+
+### updateCamera
+
+Updates camera position for selected mode.
+
+<ParamField path="camera" type="Camera3D" required>
+  Camera to update (pointer)
+</ParamField>
+
+<ParamField path="mode" type="Number" required>
+  Camera mode
+</ParamField>
+
+```wren
+Raylib.updateCamera(camera3D, CameraMode.CAMERA_ORBITAL)
+```
+
+### updateCameraPro
+
+Updates camera movement/rotation with pro parameters.
+
+<ParamField path="camera" type="Camera3D" required>
+  Camera to update (pointer)
+</ParamField>
+
+<ParamField path="movement" type="Vector3" required>
+  Movement vector
+</ParamField>
+
+<ParamField path="rotation" type="Vector3" required>
+  Rotation vector
+</ParamField>
+
+<ParamField path="zoom" type="Number" required>
+  Zoom value
+</ParamField>
+
+## Complete 2D Camera Example
+
+```wren
+import "raylib" for Raylib, Camera2D, Vector2, Rectangle, Color, KeyCode
+import "math" for Math
+
+var MAX_BUILDINGS = 100
+
+var screenWidth = 800
+var screenHeight = 450
+
+Raylib.initWindow(screenWidth, screenHeight, "2D Camera System")
+
+var player = Rectangle.new(400, 280, 40, 40)
+var buildings = []
+var buildColors = []
+
+var spacing = 0
+var i = 0
+
+while (i < MAX_BUILDINGS) {
+  var height = Raylib.getRandomValue(100, 800)
+  var width = Raylib.getRandomValue(50, 200)
+  
+  buildings.add(Rectangle.new(
+    -6000 + spacing,
+    screenHeight - 130.0 - height,
+    width,
+    height
+  ))
+  
+  spacing = spacing + width
+  
+  buildColors.add(Color.new(
+    Raylib.getRandomValue(200, 240),
+    Raylib.getRandomValue(200, 240),
+    Raylib.getRandomValue(200, 250),
+    255
+  ))
+  
+  i = i + 1
+}
+
+var camera = Camera2D.new(
+  Vector2.new(screenWidth / 2.0, screenHeight / 2.0),
+  Vector2.new(player.x + 20.0, player.y + 20.0),
+  1.0,
+  0.0
+)
+
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+  // Player movement
+  if (Raylib.isKeyDown(KeyCode.KEY_RIGHT)) player.x = player.x + 2
+  if (Raylib.isKeyDown(KeyCode.KEY_LEFT)) player.x = player.x - 2
+  
+  // Camera target follows player
+  camera.target = Vector2.new(player.x + 20, player.y + 20)
+  
+  // Camera rotation
+  if (Raylib.isKeyDown(KeyCode.KEY_A)) {
+    camera.rotation = camera.rotation - 1
+  } else if (Raylib.isKeyDown(KeyCode.KEY_S)) {
+    camera.rotation = camera.rotation + 1
+  }
+  
+  if (camera.rotation > 40) camera.rotation = 40
+  if (camera.rotation < -40) camera.rotation = -40
+  
+  // Camera zoom
+  camera.zoom = Math.exp(Math.log(camera.zoom) + (Raylib.getMouseWheelMove() * 0.1))
+  
+  if (camera.zoom > 3.0) camera.zoom = 3.0
+  if (camera.zoom < 0.1) camera.zoom = 0.1
+  
+  // Reset camera
+  if (Raylib.isKeyDown(KeyCode.KEY_R)) {
+    camera.zoom = 1.0
+    camera.rotation = 0.0
+  }
+  
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  Raylib.beginMode2D(camera)
+  
+  // Draw world
+  Raylib.drawRectangle(-6000, 320, 13000, 8000, Color.DarkGray)
+  
+  var i = 0
+  while (i < MAX_BUILDINGS) {
+    Raylib.drawRectangleRec(buildings[i], buildColors[i])
+    i = i + 1
+  }
+  
+  Raylib.drawRectangleRec(player, Color.Red)
+  
+  // Draw crosshair at camera target
+  Raylib.drawLine(camera.target.x, -screenHeight * 10, camera.target.x, screenHeight * 10, Color.Green)
+  Raylib.drawLine(-screenWidth * 10, camera.target.y, screenWidth * 10, camera.target.y, Color.Green)
+  
+  Raylib.endMode2D()
+  
+  // Draw UI (screen space)
+  Raylib.drawRectangle(0, 0, screenWidth, 5, Color.Red)
+  Raylib.drawRectangle(0, 5, 5, screenHeight - 10, Color.Red)
+  Raylib.drawRectangle(screenWidth - 5, 5, 5, screenHeight - 10, Color.Red)
+  Raylib.drawRectangle(0, screenHeight - 5, screenWidth, 5, Color.Red)
+  
+  Raylib.drawRectangle(10, 10, 250, 113, Color.SkyBlue)
+  Raylib.drawRectangleLines(10, 10, 250, 113, Color.Blue)
+  
+  Raylib.drawText("Free 2D camera controls:", 20, 20, 10, Color.Black)
+  Raylib.drawText("- Right/Left to move", 40, 40, 10, Color.DarkGray)
+  Raylib.drawText("- Mouse Wheel to Zoom", 40, 60, 10, Color.DarkGray)
+  Raylib.drawText("- A/S to Rotate", 40, 80, 10, Color.DarkGray)
+  Raylib.drawText("- R to reset", 40, 100, 10, Color.DarkGray)
+  
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+## Best Practices
+
+<Tip>
+  Use `beginMode2D()` and `endMode2D()` to separate world-space rendering from screen-space UI.
+</Tip>
+
+<Note>
+  The camera offset is typically set to the screen center (screenWidth/2, screenHeight/2) for smooth following behavior.
+</Note>
+
+<Warning>
+  Camera properties must be updated **before** `beginMode2D()` to take effect in the current frame.
+</Warning>
+
+<Tip>
+  Use `getScreenToWorld2D()` to convert mouse clicks to world coordinates for object placement or interaction.
+</Tip>

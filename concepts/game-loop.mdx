@@ -1,0 +1,221 @@
+---
+title: Game Loop
+description: Understanding Talon's game loop pattern with Raylib
+icon: rotate
+---
+
+## Overview
+
+Every Talon game follows a standard game loop pattern. This pattern initializes the window, runs the main game loop, and cleans up resources when done.
+
+## Basic Game Loop Structure
+
+Here's the fundamental structure of a Talon game:
+
+```wren
+import "raylib" for Color, Raylib
+
+// 1. Initialize the window
+Raylib.initWindow(800, 600, "My Game")
+Raylib.setTargetFPS(60)
+
+// 2. Main game loop
+while (!Raylib.windowShouldClose()) {
+  // Update game state here
+  
+  // Render
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  // Draw your game here
+  Raylib.drawText("Hello, Talon!", 20, 20, 40, Color.Black)
+  
+  Raylib.endDrawing()
+}
+
+// 3. Clean up
+Raylib.closeWindow()
+```
+
+## The Three Phases
+
+### 1. Initialization
+
+Set up your window and configure game settings:
+
+```wren
+var screenWidth = 1000
+var screenHeight = 1000
+
+Raylib.initWindow(screenWidth, screenHeight, "raylib [core] example - basic screen manager")
+Raylib.setTargetFPS(60)
+
+// Initialize game state
+var currentScreen = GameScreen.Logo
+var framesCounter = 0
+```
+
+### 2. Main Loop
+
+The main loop runs continuously until the window is closed:
+
+```wren
+while (!Raylib.windowShouldClose()) {
+  // Update Phase
+  // - Process input
+  // - Update game logic
+  // - Handle collisions
+  
+  // Render Phase
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  // All drawing calls go here
+  
+  Raylib.endDrawing()
+}
+```
+
+<Warning>
+  All drawing calls must be between `beginDrawing()` and `endDrawing()`. Drawing outside this block will cause errors.
+</Warning>
+
+### 3. Cleanup
+
+Always clean up resources when your game exits:
+
+```wren
+Raylib.closeWindow()
+```
+
+## Complete Example with Game State
+
+Here's a more complete example from the Talon examples:
+
+```wren
+import "raylib" for Color, Raylib, KeyCode
+
+var screenWidth = 1000 
+var screenHeight = 1000
+
+Raylib.initWindow(screenWidth, screenHeight, "raylib [core] example - basic screen manager")
+
+var currentScreen = GameScreen.Logo
+var framesCounter = 0
+
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+  // Update
+  if (currentScreen == GameScreen.Logo) {
+    framesCounter = framesCounter + 1
+    if (framesCounter > 120) {
+      currentScreen = GameScreen.Title
+    }
+  }
+
+  if (currentScreen == GameScreen.Title) {
+    if (Raylib.isKeyPressed(KeyCode.KEY_ENTER)) {
+      currentScreen = GameScreen.GamePlay
+    }
+  }
+
+  // Draw
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+
+  if (currentScreen == GameScreen.Logo) {
+    Raylib.drawText("LOGO SCREEN", 20, 20, 60, Color.Yellow)
+    Raylib.drawText("Wait for 3 seconds...", 290, 220, 20, Color.Gray)
+  }
+
+  if (currentScreen == GameScreen.Title) {
+    Raylib.drawRectangle(0, 0, screenWidth, screenHeight, Color.Green)
+    Raylib.drawText("TITLE SCREEN", 20, 20, 40, Color.Blue)
+    Raylib.drawText("PRESS ENTER to JUMP to GAMEPLAY SCREEN", 120, 220, 20, Color.DarkGreen)
+  }
+
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+## Advanced Pattern: Separate Update and Draw
+
+For larger games, it's common to separate update and draw logic into a Game class:
+
+```wren
+import "raylib" for Color, Raylib
+import "./game" for Game
+
+var width = 600
+var height = 800
+
+Raylib.initWindow(width, height, "My Game")
+Raylib.setTargetFPS(60)
+
+var game = Game.new()
+
+while (!Raylib.windowShouldClose()) {
+  // Update phase
+  game.update()
+
+  // Draw phase
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.new(20, 20, 20, 255))
+  game.draw()
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+<Info>
+  This pattern keeps your main loop clean and delegates game logic to separate modules. See the [Project Structure](/concepts/project-structure) guide for more details.
+</Info>
+
+## Hot Reload Mode
+
+When running with the `--hot` flag, you need to check for stop signals:
+
+```wren
+import "builtin" for Build
+
+while (!Raylib.windowShouldClose() && !Build.shouldStop()) {
+  // Your game loop
+}
+```
+
+<Card title="Hot Reload" icon="fire" href="/concepts/hot-reload">
+  Learn more about hot reload mode for faster development
+</Card>
+
+## Delta Time
+
+For smooth, frame-rate independent movement, use delta time:
+
+```wren
+var dt = Raylib.getFrameTime()
+
+// Update positions using delta time
+_ball.rec.x = _ball.rec.x + _ball.vel.x * dt
+_ball.rec.y = _ball.rec.y + _ball.vel.y * dt
+
+_paddle.rec.x = _paddle.rec.x - PADDLE_SPEED * dt
+```
+
+<Tip>
+  Multiplying movement by delta time ensures consistent speed regardless of frame rate.
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Wren Language" icon="code" href="/concepts/wren-language">
+    Learn more about Wren syntax and features
+  </Card>
+  <Card title="Hot Reload" icon="fire" href="/concepts/hot-reload">
+    Enable hot reload for faster iteration
+  </Card>
+</CardGroup>

@@ -1,0 +1,239 @@
+---
+title: Texture2D
+description: 2D texture for image rendering
+---
+
+The `Texture2D` class represents a 2D texture loaded from an image file. Textures are used to render sprites, backgrounds, and other visual elements.
+
+## Constructor
+
+<Note>
+  Texture2D objects are not created directly with `new()`. Instead, use the static method `Texture2D.loadTexture(path)` or `Raylib.loadTexture(path)`.
+</Note>
+
+## Properties
+
+<ParamField path="width" type="number">
+  The width of the texture in pixels (read-only)
+</ParamField>
+
+<ParamField path="height" type="number">
+  The height of the texture in pixels (read-only)
+</ParamField>
+
+## Static Methods
+
+<ParamField path="Texture2D.loadTexture" type="function">
+  Loads a texture from a file
+  
+  <Expandable title="parameters">
+    <ParamField path="path" type="string" required>
+      The file path to the image to load
+    </ParamField>
+  </Expandable>
+  
+  <Expandable title="returns">
+    Returns a `Texture2D` object
+  </Expandable>
+</ParamField>
+
+<Note>
+  You can also use `Raylib.loadTexture(path)` which is equivalent to `Texture2D.loadTexture(path)`.
+</Note>
+
+## Instance Methods
+
+<ParamField path="unloadTexture" type="function">
+  Unloads the texture from memory. Always unload textures when you're done with them to prevent memory leaks.
+</ParamField>
+
+<Note>
+  You can also use `Raylib.unloadTexture(texture)` to unload a texture.
+</Note>
+
+## Examples
+
+### Loading and Drawing a Texture
+
+```wren
+import "raylib" for Raylib, Texture2D, Color
+
+Raylib.initWindow(800, 450, "Texture Example")
+
+// Load texture
+var texture = Texture2D.loadTexture("assets/sprite.png")
+
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  // Draw texture at position (100, 100)
+  Raylib.drawTexture(texture, 100, 100, Color.White)
+  
+  Raylib.endDrawing()
+}
+
+// Unload texture when done
+texture.unloadTexture()
+Raylib.closeWindow()
+```
+
+### Checking Texture Dimensions
+
+```wren
+import "raylib" for Texture2D, Raylib
+
+var texture = Texture2D.loadTexture("ball.png")
+
+System.print("Texture width: %(texture.width)")
+System.print("Texture height: %(texture.height)")
+
+texture.unloadTexture()
+```
+
+### Drawing Part of a Texture
+
+```wren
+import "raylib" for Raylib, Texture2D, Rectangle, Vector2, Color
+
+var texture = Texture2D.loadTexture("spritesheet.png")
+
+// Define source rectangle (part of texture to draw)
+var source = Rectangle.new(0, 0, 16, 16)
+
+// Define destination rectangle (where and how big to draw)
+var dest = Rectangle.new(100, 100, 32, 32)
+
+Raylib.beginDrawing()
+Raylib.clearBackground(Color.RayWhite)
+
+// Draw partial texture
+Raylib.drawTextureRec(texture, source, Vector2.new(100, 100), Color.White)
+
+Raylib.endDrawing()
+```
+
+### Advanced Texture Drawing
+
+```wren
+import "raylib" for Raylib, Texture2D, Rectangle, Vector2, Color
+
+var texture = Texture2D.loadTexture("ball.png")
+
+// Source: which part of the texture to draw
+var source = Rectangle.new(0, 0, 16, 16)
+
+// Destination: where and what size to draw
+var dest = Rectangle.new(100, 100, 32, 32)
+
+// Origin: rotation point
+var origin = Vector2.new(16, 16)
+
+// Rotation angle
+var rotation = 45.0
+
+// Tint color (white = no tint)
+var tint = Color.new(255, 255, 255, 255)
+
+Raylib.beginDrawing()
+Raylib.clearBackground(Color.RayWhite)
+
+// Draw texture with all options
+Raylib.drawTexturePro(texture, source, dest, origin, rotation, tint)
+
+Raylib.endDrawing()
+
+texture.unloadTexture()
+```
+
+### Real Usage from Ball Example
+
+```wren
+import "raylib" for Raylib, Texture2D, Rectangle, Vector2, Color
+
+var BALL_TEXTURE_DIMS = Rectangle.new(0.0, 0.0, 16.0, 16.0)
+
+class Ball {
+  construct new() {
+    _rec = Rectangle.new(
+      SCREEN_WIDTH / 2.0 - BALL_W / 2.0,
+      SCREEN_HEIGHT - BALL_H - 40.0,
+      BALL_W,
+      BALL_H
+    )
+  }
+  
+  rec { _rec }
+  
+  draw(texture) {
+    Raylib.drawTexturePro(
+      texture,
+      BALL_TEXTURE_DIMS,           // source
+      _rec,                        // destination
+      Vector2.new(0.0, 0.0),      // origin
+      0.0,                         // rotation
+      Color.new(255, 255, 255, 255) // tint
+    )
+  }
+}
+
+// Usage
+var ballTexture = Texture2D.loadTexture("assets/ball.png")
+var ball = Ball.new()
+
+Raylib.beginDrawing()
+ball.draw(ballTexture)
+Raylib.endDrawing()
+
+ballTexture.unloadTexture()
+```
+
+### Texture Scaling
+
+```wren
+import "raylib" for Raylib, Texture2D, Vector2, Color
+
+var texture = Texture2D.loadTexture("player.png")
+
+// Draw texture at 2x scale
+var position = Vector2.new(100, 100)
+var rotation = 0.0
+var scale = 2.0
+var tint = Color.White
+
+Raylib.drawTextureEx(texture, position, rotation, scale, tint)
+```
+
+### Multiple Textures
+
+```wren
+import "raylib" for Raylib, Texture2D, Color
+
+Raylib.initWindow(800, 450, "Multiple Textures")
+
+// Load multiple textures
+var playerTexture = Texture2D.loadTexture("player.png")
+var enemyTexture = Texture2D.loadTexture("enemy.png")
+var backgroundTexture = Texture2D.loadTexture("background.png")
+
+while (!Raylib.windowShouldClose()) {
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  // Draw in order (back to front)
+  Raylib.drawTexture(backgroundTexture, 0, 0, Color.White)
+  Raylib.drawTexture(enemyTexture, 200, 200, Color.White)
+  Raylib.drawTexture(playerTexture, 400, 300, Color.White)
+  
+  Raylib.endDrawing()
+}
+
+// Unload all textures
+playerTexture.unloadTexture()
+enemyTexture.unloadTexture()
+backgroundTexture.unloadTexture()
+
+Raylib.closeWindow()
+```

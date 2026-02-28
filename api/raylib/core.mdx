@@ -1,0 +1,206 @@
+---
+title: "Core Functions"
+description: "Core Raylib timing, randomization, and system functions for game development"
+---
+
+## Overview
+
+Core functions provide essential game loop utilities, frame timing, random number generation, and window lifecycle management.
+
+## Timing Functions
+
+### setTargetFPS
+
+Sets the target frames-per-second for the game loop.
+
+<ParamField path="fps" type="Number" required>
+  Target frames per second (typically 60)
+</ParamField>
+
+```wren
+import "raylib" for Raylib
+
+Raylib.initWindow(800, 450, "FPS Example")
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose()) {
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  Raylib.endDrawing()
+}
+```
+
+### getFrameTime
+
+Returns the time in seconds for the last frame drawn (delta time).
+
+**Returns:** `Number` - Time in seconds between frames
+
+```wren
+var deltaTime = Raylib.getFrameTime()
+// Use for frame-independent movement
+player.x = player.x + (speed * deltaTime)
+```
+
+### getTime
+
+Returns elapsed time in seconds since window initialization.
+
+**Returns:** `Number` - Total elapsed time in seconds
+
+```wren
+var elapsedTime = Raylib.getTime()
+System.print("Game has been running for %(elapsedTime) seconds")
+```
+
+### getFPS
+
+Returns the current frames per second.
+
+**Returns:** `Number` - Current FPS
+
+```wren
+var fps = Raylib.getFPS()
+Raylib.drawText("FPS: %(fps)", 10, 10, 20, Color.Green)
+```
+
+## Random Number Generation
+
+### setRandomSeed
+
+Sets the seed for random number generation.
+
+<ParamField path="seed" type="Number" required>
+  Seed value for the random number generator
+</ParamField>
+
+```wren
+Raylib.setRandomSeed(12345)
+```
+
+### getRandomValue
+
+Generates a random integer between min and max (inclusive).
+
+<ParamField path="min" type="Number" required>
+  Minimum value (inclusive)
+</ParamField>
+
+<ParamField path="max" type="Number" required>
+  Maximum value (inclusive)
+</ParamField>
+
+**Returns:** `Number` - Random integer between min and max
+
+```wren
+var buildings = []
+var i = 0
+while (i < 100) {
+  var height = Raylib.getRandomValue(100, 800)
+  var width = Raylib.getRandomValue(50, 200)
+  buildings.add(Rectangle.new(-6000 + spacing, screenHeight - height, width, height))
+  i = i + 1
+}
+```
+
+## System Functions
+
+### waitTime
+
+Wait for some time (halt program execution).
+
+<ParamField path="seconds" type="Number" required>
+  Time to wait in seconds
+</ParamField>
+
+```wren
+Raylib.waitTime(1.0)  // Wait 1 second
+```
+
+### takeScreenshot
+
+Takes a screenshot of current screen (filename extension defines format).
+
+<ParamField path="fileName" type="String" required>
+  Path to save the screenshot (supports .png, .bmp, .tga, .jpg)
+</ParamField>
+
+```wren
+if (Raylib.isKeyPressed(KeyCode.KEY_S)) {
+  Raylib.takeScreenshot("screenshot.png")
+}
+```
+
+### setConfigFlags
+
+Setup init configuration flags (before window creation).
+
+<ParamField path="flags" type="Number" required>
+  Configuration flags (bitwise OR combination)
+</ParamField>
+
+```wren
+// Must be called before initWindow
+Raylib.setConfigFlags(ConfigFlags.FLAG_VSYNC_HINT)
+Raylib.initWindow(800, 450, "My Game")
+```
+
+### openURL
+
+Open URL with default system browser (if available).
+
+<ParamField path="url" type="String" required>
+  URL to open
+</ParamField>
+
+```wren
+if (Raylib.isKeyPressed(KeyCode.KEY_H)) {
+  Raylib.openURL("https://github.com/jossephus/talon")
+}
+```
+
+### setTraceLogLevel
+
+Set the current trace log level.
+
+<ParamField path="logLevel" type="Number" required>
+  Log level (0=ALL, 1=TRACE, 2=DEBUG, 3=INFO, 4=WARNING, 5=ERROR, 6=FATAL, 7=NONE)
+</ParamField>
+
+```wren
+Raylib.setTraceLogLevel(3)  // Show only INFO and above
+```
+
+## Advanced Functions
+
+### swapScreenBuffer
+
+Swaps front and back buffers (manual frame control).
+
+```wren
+// Advanced usage - typically handled by endDrawing()
+Raylib.swapScreenBuffer()
+```
+
+### pollInputEvents
+
+Register all input events (manual input polling).
+
+```wren
+// Advanced usage - typically handled automatically
+Raylib.pollInputEvents()
+```
+
+## Best Practices
+
+<Tip>
+  Always call `setTargetFPS(60)` after `initWindow` to ensure consistent frame rate across different hardware.
+</Tip>
+
+<Note>
+  Use `getFrameTime()` for frame-independent movement to ensure your game runs consistently regardless of frame rate.
+</Note>
+
+<Warning>
+  `setConfigFlags()` must be called **before** `initWindow()` to take effect.
+</Warning>

@@ -1,0 +1,402 @@
+---
+title: Building for WebAssembly
+description: Build browser-ready WebAssembly applications using Emscripten
+---
+
+## Overview
+
+Talon supports compiling your games and applications to WebAssembly (WASM) for browser deployment. The `talon init-wasm` command sets up a complete build environment using Emscripten and generates an HTML shell for running your application.
+
+## Prerequisites
+
+<Warning>
+You must have Docker installed on your system. The WASM build uses a NixOS-based Docker container with Emscripten pre-configured.
+</Warning>
+
+- Docker Engine 20.10 or later
+- Docker Compose 2.0 or later
+- Your Talon project with a main Wren script
+
+## Initializing WASM Build
+
+<Steps>
+  <Step title="Run the init-wasm command">
+    Navigate to your project directory and run:
+    
+    ```bash
+    talon init-wasm main.wren
+    ```
+    
+    Replace `main.wren` with the path to your main Wren script file.
+  </Step>
+  
+  <Step title="Generated files">
+    The command creates three files in your project directory:
+    
+    - `Dockerfile` - NixOS-based build configuration with Emscripten
+    - `docker-compose.yml` - Build orchestration
+    - `shell.html` - HTML wrapper for your WASM application
+  </Step>
+</Steps>
+
+## Generated Files
+
+### shell.html
+
+The HTML shell provides a complete interface for your WASM application:
+
+```html
+<!doctype html>
+<html lang="EN-us">
+  <head>
+    <meta charset="utf-8" />
+    <title>Breakout Sample Game</title>
+    <style>
+      canvas.emscripten {
+        border: 0px none;
+        background: black;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="emscripten_border">
+      <canvas
+        class="emscripten"
+        id="canvas"
+        oncontextmenu="event.preventDefault()"
+      ></canvas>
+    </div>
+    <textarea id="output" rows="8"></textarea>
+    {{{ SCRIPT }}}
+  </body>
+</html>
+```
+
+**Features included:**
+- Fullscreen button
+- Audio mute/resume controls
+- Loading spinner and progress indicator
+- Console output display
+- Mobile-friendly viewport settings
+
+<Info>
+The shell is based on Raylib's web template and includes optimizations for game rendering and input handling.
+</Info>
+
+### Dockerfile (NixOS + Emscripten)
+
+The WASM Dockerfile uses NixOS with a Nix flake configuration:
+
+```dockerfile
+FROM nixos/nix
+
+ARG VERSION=0.14.0
+
+RUN echo "experimental-features = nix-command flakes" >> /etc/nix/nix.conf
+
+WORKDIR /build
+COPY . /build
+
+RUN cat <<'EOF' > flake.nix
+{
+  inputs = {
+    nixpkgs.url = "nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+    zig.url = "github:mitchellh/zig-overlay";
+  };
+
+  outputs = {
+    nixpkgs,
+    flake-utils,
+    zig,
+    ...
+  }:
+    flake-utils.lib.eachDefaultSystem (
+      system: let
+        packages = with pkgs; [
+          glfw
+          libGL
+          pkg-config
+          xorg.libX11
+          zigpkgs."0.14.0"
+          emscripten
+        ];
+      in {
+        devShell = pkgs.mkShell {
+          buildInputs = packages;
+          shellHook = ''
+            # Setup Emscripten cache
+            export EM_CACHE=$(pwd)/.emscripten_cache-${pkgs.emscripten.version}
+          '';
+        };
+      }
+    );
+}
+EOF
+
+RUN nix develop -L --verbose
+```
+
+### docker-compose.yml
+
+```yaml
+services:
+  wasm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./dist:/build/zig-out/www
+    working_dir: /build
+    command: nix develop -L --verbose && zig build -Dtarget=wasm32-emscripten -Doptimize=ReleaseSmall && tail -f /dev/null
+```
+
+## Building Your WASM Application
+
+<Steps>
+  <Step title="Start the build">
+    Run Docker Compose to build your WASM application:
+    
+    ```bash
+    docker-compose up
+    ```
+    
+    This process:
+    1. Downloads and caches Emscripten
+    2. Compiles Zig, Wren, and Raylib to WASM
+    3. Links everything with Emscripten
+    4. Generates `index.html`, `index.js`, and `index.wasm`
+  </Step>
+  
+  <Step title="Locate output files">
+    Build artifacts are placed in `dist/` directory:
+    
+    ```
+    dist/
+    ├── index.html     # Main HTML page
+    ├── index.js       # JavaScript loader
+    └── index.wasm     # Compiled WebAssembly module
+    ```
+  </Step>
+  
+  <Step title="Test locally">
+    Serve the files with any HTTP server:
+    
+    ```bash
+    cd dist
+    python -m http.server 8000
+    ```
+    
+    Then open http://localhost:8000 in your browser.
+  </Step>
+</Steps>
+
+<Warning>
+WASM files must be served over HTTP/HTTPS. Opening `index.html` directly as a file will not work due to CORS restrictions.
+</Warning>
+
+## Build Configuration
+
+### Emscripten Flags
+
+The generated `build.zig` uses these Emscripten settings:
+
+```zig
+emcc.addArgs(&.{
+    "-sUSE_GLFW=3",              // Use GLFW for window/input
+    "-sUSE_OFFSET_CONVERTER",   // Pointer safety
+    "-sSHARED_MEMORY=1",         // Enable SharedArrayBuffer
+    "-sALLOW_MEMORY_GROWTH=1",  // Dynamic memory allocation
+    "-sASYNCIFY",                // Enable async operations
+    "-sundefs",                  // Allow undefined symbols
+    "--shell-file",
+    b.path("shell.html").getPath(b),
+});
+```
+
+### Memory Model
+
+Talon WASM builds use shared memory with threading support:
+
+```zig
+const wasm_target = b.resolveTargetQuery(.{
+    .cpu_arch = .wasm32,
+    .cpu_model = .{ .explicit = &std.Target.wasm.cpu.mvp },
+    .cpu_features_add = std.Target.wasm.featureSet(&.{
+        .atomics,        // Atomic operations
+        .bulk_memory,    // Bulk memory operations
+    }),
+    .os_tag = .emscripten,
+});
+```
+
+<Info>
+Shared memory requires proper HTTP headers when deploying. See the deployment section below.
+</Info>
+
+## Interacting with JavaScript
+
+The generated build includes example functions for calling Zig from JavaScript:
+
+```zig
+export fn add(a: i32, b: i32) i32 {
+    return a + b;
+}
+
+export fn sub(a: i32, b: i32) i32 {
+    return a - b;
+}
+```
+
+Call from JavaScript:
+
+```javascript
+Module.onRuntimeInitialized = function() {
+  const add = Module.cwrap('add', 'number', ['number', 'number']);
+  const result = add(10, 5);
+  console.log('10 + 5 = ' + result);
+};
+```
+
+The HTML shell includes a test button:
+
+```html
+<button onclick="alert(Module.cwrap('add', 'number', ['number', 'number'])(2, 3))">
+  Call Zig add(2, 3)
+</button>
+```
+
+## Asset Embedding
+
+All `.wren` files are embedded in the WASM module:
+
+```zig
+pub fn addAssetsOption(b: *std.Build, exe: anytype, target: anytype, optimize: anytype, step: *std.Build.Step) !void {
+    var files = std.ArrayList([]const u8).init(b.allocator);
+    try checkWrenFiles(b.allocator, &files, b, ".", ".", step);
+    
+    options.addOption([]const []const u8, "files", files.items);
+    exe.step.dependOn(&options.step);
+}
+```
+
+<Info>
+Wren scripts are compiled into the WASM binary, so no separate file loading is needed at runtime.
+</Info>
+
+## Deploying to Production
+
+### Required HTTP Headers
+
+For SharedArrayBuffer support, serve with these headers:
+
+```
+Cross-Origin-Embedder-Policy: require-corp
+Cross-Origin-Opener-Policy: same-origin
+```
+
+### Nginx Configuration
+
+```nginx
+location /your-game/ {
+    add_header Cross-Origin-Embedder-Policy require-corp;
+    add_header Cross-Origin-Opener-Policy same-origin;
+    add_header Cache-Control "public, max-age=31536000";
+}
+```
+
+### Static Hosting Services
+
+**Cloudflare Pages**: Add `_headers` file:
+
+```
+/*
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Opener-Policy: same-origin
+```
+
+**Netlify**: Add `_headers` file:
+
+```
+/*
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Opener-Policy: same-origin
+```
+
+<Warning>
+Without these headers, your application may fail to load with "SharedArrayBuffer is not defined" errors.
+</Warning>
+
+## Optimization
+
+### Build Size
+
+Reduce WASM file size:
+
+```bash
+zig build -Dtarget=wasm32-emscripten -Doptimize=ReleaseSmall
+```
+
+Optimization modes:
+- `ReleaseSmall` - Smallest file size (~1-2 MB)
+- `ReleaseSafe` - Balanced size with safety checks
+- `ReleaseFast` - Maximum performance
+
+### Loading Performance
+
+The shell includes:
+- Progress indicator during download
+- Spinner animation
+- Status messages
+
+```javascript
+Module.setStatus = function(text) {
+  var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/((\d+)\)/);
+  if (m) {
+    progressElement.value = parseInt(m[2]) * 100;
+    progressElement.max = parseInt(m[4]) * 100;
+  }
+};
+```
+
+## Browser Compatibility
+
+| Browser | Version | Status |
+|---------|---------|--------|
+| Chrome | 92+ | Full support |
+| Firefox | 89+ | Full support |
+| Safari | 15.2+ | Full support |
+| Edge | 92+ | Full support |
+
+<Info>
+SharedArrayBuffer requires relatively recent browser versions. For older browser support, modify the Emscripten flags to remove `-sSHARED_MEMORY=1`.
+</Info>
+
+## Troubleshooting
+
+### "SharedArrayBuffer is not defined"
+
+Ensure your server sends the required CORS headers (see Deployment section).
+
+### Emscripten cache errors
+
+The first build downloads and caches Emscripten. This can take 10-15 minutes. Subsequent builds reuse the cache.
+
+### Build fails with linking errors
+
+Verify all dependencies are included in the link phase of `build.zig`:
+
+```zig
+const link_items: []const *std.Build.Step.Compile = &.{
+    wren_lib,
+    raylib_lib,
+    app_lib,
+};
+```
+
+## Next Steps
+
+- Learn about [Building Native Executables](/deployment/building-executables)
+- Understand the [Docker Setup](/deployment/docker-setup) details
+- Explore [JavaScript interop](/essentials/javascript-interop) for advanced integrations

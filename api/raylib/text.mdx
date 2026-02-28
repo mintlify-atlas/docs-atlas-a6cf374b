@@ -1,0 +1,460 @@
+---
+title: "Text Functions"
+description: "Text rendering, font loading, and text measurement functions"
+---
+
+## Overview
+
+Text functions provide capabilities for rendering text, loading custom fonts, and measuring text dimensions.
+
+## Basic Text Drawing
+
+### drawText
+
+Draws text using the default font.
+
+<ParamField path="text" type="String" required>
+  Text to draw
+</ParamField>
+
+<ParamField path="posX" type="Number" required>
+  X position
+</ParamField>
+
+<ParamField path="posY" type="Number" required>
+  Y position
+</ParamField>
+
+<ParamField path="fontSize" type="Number" required>
+  Font size
+</ParamField>
+
+<ParamField path="color" type="Color" required>
+  Text color
+</ParamField>
+
+```wren
+import "raylib" for Raylib, Color
+
+Raylib.initWindow(800, 450, "Text Example")
+Raylib.setTargetFPS(60)
+
+var title = "Hello Talon!"
+var color = Color.Purple
+
+while (!Raylib.windowShouldClose()) {
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  Raylib.drawText(title, 20, 20, 60, color)
+  Raylib.drawText("FPS: %(Raylib.getFPS())", 10, 100, 20, Color.Green)
+  
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+### drawFPS
+
+Draws current FPS at specified position.
+
+<ParamField path="posX" type="Number" required>
+  X position
+</ParamField>
+
+<ParamField path="posY" type="Number" required>
+  Y position
+</ParamField>
+
+```wren
+Raylib.drawFPS(10, 10)
+```
+
+## Custom Font Drawing
+
+### drawTextEx
+
+Draws text using a custom font with spacing.
+
+<ParamField path="font" type="Font" required>
+  Font to use
+</ParamField>
+
+<ParamField path="text" type="String" required>
+  Text to draw
+</ParamField>
+
+<ParamField path="position" type="Vector2" required>
+  Position to draw at
+</ParamField>
+
+<ParamField path="fontSize" type="Number" required>
+  Font size
+</ParamField>
+
+<ParamField path="spacing" type="Number" required>
+  Character spacing
+</ParamField>
+
+<ParamField path="tint" type="Color" required>
+  Text color
+</ParamField>
+
+```wren
+var font = Raylib.loadFont("resources/font.ttf")
+var position = Vector2.new(100, 100)
+var fontSize = 32
+var spacing = 2
+
+Raylib.drawTextEx(font, "Custom Font Text", position, fontSize, spacing, Color.Black)
+
+Raylib.unloadFont(font)
+```
+
+### drawTextPro
+
+Draws text using font with pro parameters (rotation, origin).
+
+<ParamField path="font" type="Font" required>
+  Font to use
+</ParamField>
+
+<ParamField path="text" type="String" required>
+  Text to draw
+</ParamField>
+
+<ParamField path="position" type="Vector2" required>
+  Position
+</ParamField>
+
+<ParamField path="origin" type="Vector2" required>
+  Rotation origin
+</ParamField>
+
+<ParamField path="rotation" type="Number" required>
+  Rotation in degrees
+</ParamField>
+
+<ParamField path="fontSize" type="Number" required>
+  Font size
+</ParamField>
+
+<ParamField path="spacing" type="Number" required>
+  Character spacing
+</ParamField>
+
+<ParamField path="tint" type="Color" required>
+  Text color
+</ParamField>
+
+```wren
+var rotation = 45.0
+var origin = Vector2.new(0, 0)
+Raylib.drawTextPro(font, "Rotated Text", Vector2.new(400, 300), origin, rotation, 32, 2, Color.Red)
+```
+
+## Font Loading
+
+### loadFont
+
+Loads font from file into GPU memory (TTF, OTF).
+
+<ParamField path="fileName" type="String" required>
+  Path to font file
+</ParamField>
+
+**Returns:** `Font` - Loaded font
+
+```wren
+var customFont = Raylib.loadFont("resources/pixelfont.ttf")
+
+// Use the font
+Raylib.drawTextEx(customFont, "Pixel Text", Vector2.new(10, 10), 20, 1, Color.Black)
+
+// Don't forget to unload
+Raylib.unloadFont(customFont)
+```
+
+### loadFontEx
+
+Loads font from file with extended parameters.
+
+<ParamField path="fileName" type="String" required>
+  Path to font file
+</ParamField>
+
+<ParamField path="fontSize" type="Number" required>
+  Base font size
+</ParamField>
+
+<ParamField path="codepoints" type="Array" required>
+  Array of codepoints to load (null for default)
+</ParamField>
+
+<ParamField path="codepointCount" type="Number" required>
+  Number of codepoints
+</ParamField>
+
+**Returns:** `Font` - Loaded font
+
+### getFontDefault
+
+Returns the default font.
+
+**Returns:** `Font` - Default font
+
+```wren
+var defaultFont = Raylib.getFontDefault()
+```
+
+### isFontValid
+
+Checks if a font is valid.
+
+<ParamField path="font" type="Font" required>
+  Font to check
+</ParamField>
+
+**Returns:** `Boolean` - True if valid
+
+### unloadFont
+
+Unloads font from GPU memory.
+
+<ParamField path="font" type="Font" required>
+  Font to unload
+</ParamField>
+
+```wren
+Raylib.unloadFont(customFont)
+```
+
+## Text Measurement
+
+### measureText
+
+Measures string width for default font.
+
+<ParamField path="text" type="String" required>
+  Text to measure
+</ParamField>
+
+<ParamField path="fontSize" type="Number" required>
+  Font size
+</ParamField>
+
+**Returns:** `Number` - Text width in pixels
+
+```wren
+var text = "Hello World"
+var fontSize = 20
+var textWidth = Raylib.measureText(text, fontSize)
+
+var screenWidth = Raylib.getScreenWidth()
+var centerX = (screenWidth - textWidth) / 2
+
+Raylib.drawText(text, centerX, 200, fontSize, Color.Black)
+```
+
+### measureTextEx
+
+Measures string size for Font.
+
+<ParamField path="font" type="Font" required>
+  Font to use for measurement
+</ParamField>
+
+<ParamField path="text" type="String" required>
+  Text to measure
+</ParamField>
+
+<ParamField path="fontSize" type="Number" required>
+  Font size
+</ParamField>
+
+<ParamField path="spacing" type="Number" required>
+  Character spacing
+</ParamField>
+
+**Returns:** `Vector2` - Text dimensions (width, height)
+
+```wren
+var textSize = Raylib.measureTextEx(customFont, "Test", 32, 2)
+var width = textSize.x
+var height = textSize.y
+```
+
+## Text Configuration
+
+### setTextLineSpacing
+
+Sets vertical line spacing when drawing text.
+
+<ParamField path="spacing" type="Number" required>
+  Line spacing in pixels
+</ParamField>
+
+```wren
+Raylib.setTextLineSpacing(20)
+```
+
+## Text Manipulation
+
+These functions operate on strings at the Wren level:
+
+### textLength
+
+Returns text length (including null terminator).
+
+<ParamField path="text" type="String" required>
+  Text to measure
+</ParamField>
+
+**Returns:** `Number` - Text length
+
+### textCopy
+
+Copies text to another string.
+
+<ParamField path="dst" type="String" required>
+  Destination string
+</ParamField>
+
+<ParamField path="src" type="String" required>
+  Source string
+</ParamField>
+
+### textIsEqual
+
+Checks if two text strings are equal.
+
+<ParamField path="text1" type="String" required>
+  First text
+</ParamField>
+
+<ParamField path="text2" type="String" required>
+  Second text
+</ParamField>
+
+**Returns:** `Boolean` - True if equal
+
+### textSubtext
+
+Returns a substring from text.
+
+<ParamField path="text" type="String" required>
+  Source text
+</ParamField>
+
+<ParamField path="position" type="Number" required>
+  Start position
+</ParamField>
+
+<ParamField path="length" type="Number" required>
+  Substring length
+</ParamField>
+
+**Returns:** `String` - Substring
+
+### textToUpper
+
+Converts string to uppercase.
+
+<ParamField path="text" type="String" required>
+  Text to convert
+</ParamField>
+
+**Returns:** `String` - Uppercase text
+
+### textToLower
+
+Converts string to lowercase.
+
+<ParamField path="text" type="String" required>
+  Text to convert
+</ParamField>
+
+**Returns:** `String` - Lowercase text
+
+### textToInteger
+
+Converts text to integer.
+
+<ParamField path="text" type="String" required>
+  Text to convert
+</ParamField>
+
+**Returns:** `Number` - Integer value
+
+```wren
+var scoreText = "1234"
+var score = Raylib.textToInteger(scoreText)
+```
+
+### textToFloat
+
+Converts text to float.
+
+<ParamField path="text" type="String" required>
+  Text to convert
+</ParamField>
+
+**Returns:** `Number` - Float value
+
+## Complete Example
+
+```wren
+import "raylib" for Raylib, Color, Vector2
+
+var screenWidth = 800
+var screenHeight = 450
+
+Raylib.initWindow(screenWidth, screenHeight, "Text Example")
+Raylib.setTargetFPS(60)
+
+var customFont = Raylib.loadFont("resources/myfont.ttf")
+
+var title = "Talon Game Engine"
+var subtitle = "Powered by Raylib"
+
+while (!Raylib.windowShouldClose()) {
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  
+  // Center title
+  var titleWidth = Raylib.measureText(title, 60)
+  var titleX = (screenWidth - titleWidth) / 2
+  Raylib.drawText(title, titleX, 100, 60, Color.Purple)
+  
+  // Draw subtitle with custom font
+  var subtitleSize = Raylib.measureTextEx(customFont, subtitle, 30, 2)
+  var subtitleX = (screenWidth - subtitleSize.x) / 2
+  Raylib.drawTextEx(customFont, subtitle, Vector2.new(subtitleX, 200), 30, 2, Color.DarkGray)
+  
+  // Show FPS
+  Raylib.drawFPS(10, 10)
+  
+  Raylib.endDrawing()
+}
+
+Raylib.unloadFont(customFont)
+Raylib.closeWindow()
+```
+
+## Best Practices
+
+<Tip>
+  Load fonts once during initialization for better performance.
+</Tip>
+
+<Note>
+  Use `measureText()` or `measureTextEx()` to center text or calculate layout dimensions.
+</Note>
+
+<Warning>
+  Always unload custom fonts when done:
+  ```wren
+  Raylib.unloadFont(customFont)
+  ```
+</Warning>

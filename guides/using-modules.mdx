@@ -1,0 +1,606 @@
+---
+title: Using Modules
+description: Learn how to organize your game code with Wren's module system
+---
+
+As games grow in complexity, organizing code into modules becomes essential. Wren's module system, combined with Talon's support for multi-file projects, allows you to create maintainable, well-structured games.
+
+## Understanding Modules
+
+Modules in Wren allow you to:
+- Split code into multiple files
+- Import classes and functions from other files
+- Organize code by functionality
+- Create reusable game components
+
+## Basic Import Syntax
+
+Import classes from another file using the `import` statement:
+
+```wren
+import "./game" for Game
+import "./player" for Player, Enemy
+import "raylib" for Raylib, Color
+```
+
+### Import Paths
+
+- **Relative paths**: Use `./` for files in the same directory
+  ```wren
+  import "./game" for Game
+  import "./utils" for Helper
+  ```
+
+- **Built-in modules**: No path prefix required
+  ```wren
+  import "raylib" for Raylib
+  import "math" for Math
+  import "builtin" for Build
+  ```
+
+<Note>
+  File extensions (`.wren`) are omitted in import statements.
+</Note>
+
+## Real-World Example: Breakout Game
+
+The Breakout example demonstrates excellent module organization:
+
+### Project Structure
+
+```
+breakout/
+├── main.wren       # Entry point
+├── game.wren       # Main game logic
+├── ball.wren       # Ball entity
+├── paddle.wren     # Paddle entity
+├── brick.wren      # Brick entity
+├── particle.wren   # Particle effects
+├── score.wren      # Score indicators
+├── utils.wren      # Shared constants
+└── res/
+    ├── ball.png
+    ├── paddle.png
+    └── brick.png
+```
+
+<Tip>
+  Organize files by game entity or system. Each file should have a clear, single responsibility.
+</Tip>
+
+## Step-by-Step Module Creation
+
+<Steps>
+  <Step title="Create shared constants (utils.wren)">
+    ```wren
+    // utils.wren
+    var SCREEN_WIDTH = 600
+    var SCREEN_HEIGHT = 800
+    ```
+
+    This file contains constants shared across multiple modules.
+  </Step>
+
+  <Step title="Create game entities">
+    ```wren
+    // paddle.wren
+    import "raylib" for Raylib, Rectangle, Vector2, Color
+
+    var PADDLE_W = 128.0
+    var PADDLE_H = 16.0
+    var PADDLE_SPEED = 500.0
+
+    var PADDLE_TEXTURE_DIMS = Rectangle.new(0.0, 0.0, 64.0, 16.0)
+
+    var SCREEN_WIDTH = 600
+    var SCREEN_HEIGHT = 800
+
+    class Paddle {
+      construct new() {
+        _rec = Rectangle.new(
+          SCREEN_WIDTH / 2.0 - PADDLE_W / 2.0,
+          SCREEN_HEIGHT - PADDLE_H - 20.0,
+          PADDLE_W,
+          PADDLE_H
+        )
+      }
+
+      rec { _rec }
+
+      draw(texture) {
+        Raylib.drawTexturePro(
+          texture,
+          PADDLE_TEXTURE_DIMS,
+          _rec,
+          Vector2.new(0.0, 0.0),
+          0.0,
+          Color.new(255, 255, 255, 255)
+        )
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Create another entity (ball.wren)">
+    ```wren
+    // ball.wren
+    import "raylib" for Raylib, Rectangle, Vector2, Color
+    import "./paddle" for PADDLE_H
+    import "./utils" for SCREEN_HEIGHT, SCREEN_WIDTH
+
+    var BALL_W = 16.0
+    var BALL_H = 16.0
+    var BALL_SPEED = 300.0
+
+    var BALL_TEXTURE_DIMS = Rectangle.new(0.0, 0.0, 16.0, 16.0)
+
+    class Ball {
+      construct new() {
+        _rec = Rectangle.new(
+          SCREEN_WIDTH / 2.0 - BALL_W / 2.0,
+          SCREEN_HEIGHT - BALL_H - PADDLE_H - 40.0,
+          BALL_W,
+          BALL_H
+        )
+        _vel = Vector2.new(BALL_SPEED, -BALL_SPEED)
+      }
+
+      rec { _rec }
+      vel { _vel }
+
+      draw(texture) {
+        Raylib.drawTexturePro(
+          texture,
+          BALL_TEXTURE_DIMS,
+          _rec,
+          Vector2.new(0.0, 0.0),
+          0.0,
+          Color.new(255, 255, 255, 255)
+        )
+      }
+
+      apply_collission(rec) {
+        var prev_x = _rec.x - _vel.x
+        var prev_y = _rec.y - _vel.y
+
+        if (prev_y + _rec.height <= rec.y) {
+          _vel.y = _vel.y * -1.0
+        } else if (prev_y >= rec.y + rec.height) {
+          _vel.y = _vel.y * -1.0
+        } else if (prev_x + _rec.width <= rec.x) {
+          _vel.x = _vel.x * -1.0
+        } else if (prev_x >= rec.x + rec.width) {
+          _vel.x = _vel.x * -1.0
+        } else {
+          _vel.y = _vel.y * -1.0
+        }
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Create brick entity (brick.wren)">
+    ```wren
+    // brick.wren
+    import "raylib" for Raylib, Rectangle, Vector2, Color
+
+    var BRICK_W = 48.0
+    var BRICK_H = 16.0
+    var BRICK_GAP = 22.0
+    var BRICK_MARGIN = 32.0
+
+    var BRICK_TEXTURE_DIMS = Rectangle.new(0.0, 0.0, 48.0, 16.0)
+
+    class Brick {
+      construct new(x, y) {
+        _rec = Rectangle.new(x, y, BRICK_W, BRICK_H)
+      }
+
+      rec { _rec }
+
+      draw(texture) {
+        Raylib.drawTexturePro(
+          texture,
+          BRICK_TEXTURE_DIMS,
+          _rec,
+          Vector2.new(0.0, 0.0),
+          0.0,
+          Color.new(255, 255, 255, 255)
+        )
+      }
+
+      static new_bricks(rows, cols) {
+        var list = []
+        var i = 0
+
+        while (i < rows) {
+          var j = 0
+          while (j < cols) {
+            var bx = j * BRICK_W + j + 1.0 * BRICK_GAP + BRICK_MARGIN
+            var by = i * BRICK_H + i + 1.0 * BRICK_GAP + BRICK_MARGIN
+            list.add(Brick.new(bx, by))
+            j = j + 1
+          }
+          i = i + 1
+        }
+        return list
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Create main game class (game.wren)">
+    ```wren
+    // game.wren
+    import "raylib" for Color, Raylib, Rectangle, Vector2, Camera2D, KeyCode, Texture2D
+    import "math" for Math
+    import "./brick" for Brick, BRICK_W
+    import "./ball" for Ball, BALL_W, BALL_H
+    import "./paddle" for Paddle, PADDLE_SPEED, PADDLE_W
+    import "./score" for ScoreIndicator, SCORE_INC_Y, SCORE_PROG_INC_Y
+    import "./utils" for SCREEN_HEIGHT, SCREEN_WIDTH
+
+    class GameStatus {
+      static Start { "Start" }
+      static Playing { "Playing" }
+      static Won { "Won" }
+      static Over { "Over" }
+    }
+
+    class Game {
+      construct new() {
+        _brick_texture = Texture2D.loadTexture("res/brick.png")
+        _ball_texture = Texture2D.loadTexture("res/tennis.png")
+        _paddle_texture = Texture2D.loadTexture("res/paddle.png")
+        _status = GameStatus.Start
+        _bricks = Brick.new_bricks(5, 10)
+        _ball = Ball.new()
+        _paddle = Paddle.new()
+        _score = 0.0
+        _camera = Camera2D.new(
+          Vector2.new(0.0, 0.0),
+          Vector2.new(0.0, 0.0),
+          0.0,
+          1.0
+        )
+      }
+
+      draw() {
+        if (_status == GameStatus.Start) {
+          draw_start()
+        } else if (_status == GameStatus.Playing) {
+          draw_playing()
+        } else if (_status == GameStatus.Won) {
+          draw_won()
+        } else if (_status == GameStatus.Over) {
+          draw_over()
+        }
+      }
+
+      update() {
+        if (_status == GameStatus.Start) {
+          update_start()
+        } else if (_status == GameStatus.Playing) {
+          update_playing()
+        }
+      }
+
+      // ... implementation methods
+    }
+    ```
+  </Step>
+
+  <Step title="Create entry point (main.wren)">
+    ```wren
+    // main.wren
+    import "raylib" for Color, Raylib, Rectangle, Vector2, KeyCode
+    import "math" for Math
+    import "./game" for Game
+
+    var width = 600
+    var height = 800
+    var title = "Breakout"
+
+    Raylib.initWindow(width, height, title)
+
+    var game = Game.new()
+
+    Raylib.setTargetFPS(60)
+
+    while (!Raylib.windowShouldClose()) {
+      game.update()
+
+      Raylib.beginDrawing()
+      game.draw()
+      Raylib.endDrawing()
+    }
+
+    Raylib.closeWindow()
+    ```
+  </Step>
+</Steps>
+
+## Module Export Rules
+
+### What Gets Exported
+
+```wren
+// entities.wren
+var CONSTANT = 100  // Can be imported
+
+class Player {      // Can be imported
+  construct new() {}
+}
+
+class Enemy {       // Can be imported
+  construct new() {}
+}
+```
+
+### Importing Multiple Items
+
+```wren
+// Import multiple classes from one module
+import "./entities" for Player, Enemy, CONSTANT
+```
+
+### Private Implementation
+
+To keep implementation details private, define them in the same file but don't import them:
+
+```wren
+// player.wren
+var PRIVATE_CONSTANT = 10  // Only visible in this file
+
+class Player {
+  construct new() {
+    _health = PRIVATE_CONSTANT  // Can use private constant
+  }
+}
+```
+
+<Tip>
+  Only import what you need. This keeps dependencies clear and prevents naming conflicts.
+</Tip>
+
+## Running Multi-File Projects
+
+Run your game by specifying the main entry point:
+
+```bash
+talon run main.wren
+```
+
+Talon automatically resolves imports relative to the main file's directory.
+
+## Common Module Patterns
+
+### Constants Module
+
+```wren
+// constants.wren
+var SCREEN_WIDTH = 800
+var SCREEN_HEIGHT = 600
+var PLAYER_SPEED = 5
+var GRAVITY = 0.5
+```
+
+### Entity Base Class Module
+
+```wren
+// entity.wren
+import "raylib" for Vector2
+
+class Entity {
+  construct new(x, y) {
+    _position = Vector2.new(x, y)
+    _active = true
+  }
+
+  position { _position }
+  active { _active }
+  active=(value) { _active = value }
+
+  update() {
+    // Override in subclasses
+  }
+
+  draw() {
+    // Override in subclasses
+  }
+}
+```
+
+### Manager Module
+
+```wren
+// enemy_manager.wren
+import "./enemy" for Enemy
+
+class EnemyManager {
+  construct new() {
+    _enemies = []
+  }
+
+  spawn(x, y) {
+    _enemies.add(Enemy.new(x, y))
+  }
+
+  update() {
+    for (enemy in _enemies) {
+      enemy.update()
+    }
+  }
+
+  draw() {
+    for (enemy in _enemies) {
+      enemy.draw()
+    }
+  }
+}
+```
+
+## Best Practices
+
+<Note>
+  **Module organization tips:**
+  - One major class per file
+  - Group related constants with their classes
+  - Use descriptive file names that match class names
+  - Keep the main entry point (main.wren) simple
+  - Place shared utilities in a separate module
+  - Avoid circular dependencies (A imports B imports A)
+</Note>
+
+## Circular Dependency Problem
+
+Avoid circular imports:
+
+```wren
+// ❌ Bad: Circular dependency
+// player.wren
+import "./enemy" for Enemy  // Player imports Enemy
+
+// enemy.wren
+import "./player" for Player  // Enemy imports Player
+```
+
+Solution: Extract shared code to a common module:
+
+```wren
+// ✅ Good: Shared base class
+// entity.wren
+class Entity { /* base implementation */ }
+
+// player.wren
+import "./entity" for Entity
+class Player is Entity { /* ... */ }
+
+// enemy.wren
+import "./entity" for Entity
+class Enemy is Entity { /* ... */ }
+```
+
+## Complete Multi-Module Example
+
+<CodeGroup>
+```wren main.wren
+import "raylib" for Raylib, Color
+import "./game" for Game
+
+var screenWidth = 800
+var screenHeight = 600
+
+Raylib.initWindow(screenWidth, screenHeight, "Modular Game")
+Raylib.setTargetFPS(60)
+
+var game = Game.new()
+
+while (!Raylib.windowShouldClose()) {
+  game.update()
+
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  game.draw()
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+```wren game.wren
+import "./player" for Player
+import "./enemy" for Enemy
+import "./constants" for SCREEN_WIDTH, SCREEN_HEIGHT
+
+class Game {
+  construct new() {
+    _player = Player.new(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
+    _enemies = [
+      Enemy.new(100, 100),
+      Enemy.new(300, 200),
+      Enemy.new(500, 150)
+    ]
+  }
+
+  update() {
+    _player.update()
+    for (enemy in _enemies) {
+      enemy.update()
+    }
+  }
+
+  draw() {
+    _player.draw()
+    for (enemy in _enemies) {
+      enemy.draw()
+    }
+  }
+}
+```
+
+```wren player.wren
+import "raylib" for Raylib, Rectangle, Color, KeyCode
+import "./constants" for PLAYER_SPEED
+
+class Player {
+  construct new(x, y) {
+    _rec = Rectangle.new(x, y, 40, 40)
+  }
+
+  update() {
+    if (Raylib.isKeyDown(KeyCode.KEY_RIGHT)) { _rec.x = _rec.x + PLAYER_SPEED }
+    if (Raylib.isKeyDown(KeyCode.KEY_LEFT)) { _rec.x = _rec.x - PLAYER_SPEED }
+    if (Raylib.isKeyDown(KeyCode.KEY_UP)) { _rec.y = _rec.y - PLAYER_SPEED }
+    if (Raylib.isKeyDown(KeyCode.KEY_DOWN)) { _rec.y = _rec.y + PLAYER_SPEED }
+  }
+
+  draw() {
+    Raylib.drawRectangleRec(_rec, Color.Blue)
+  }
+}
+```
+
+```wren enemy.wren
+import "raylib" for Raylib, Rectangle, Color
+import "./constants" for ENEMY_SPEED
+
+class Enemy {
+  construct new(x, y) {
+    _rec = Rectangle.new(x, y, 30, 30)
+    _direction = 1
+  }
+
+  update() {
+    _rec.x = _rec.x + _direction * ENEMY_SPEED
+    if (_rec.x < 0 || _rec.x > 800) {
+      _direction = _direction * -1
+    }
+  }
+
+  draw() {
+    Raylib.drawRectangleRec(_rec, Color.Red)
+  }
+}
+```
+
+```wren constants.wren
+var SCREEN_WIDTH = 800
+var SCREEN_HEIGHT = 600
+var PLAYER_SPEED = 5
+var ENEMY_SPEED = 2
+```
+</CodeGroup>
+
+## Next Steps
+
+Now that you know how to organize code with modules, you can:
+
+- Build larger, more complex games
+- Create reusable component libraries
+- Share code between multiple projects
+- Collaborate with others more effectively
+
+<Tip>
+  Study the official Breakout example in the Talon repository for a real-world example of excellent module organization.
+</Tip>
