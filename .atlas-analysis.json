@@ -1,0 +1,161 @@
+{
+  "projectType": "framework",
+  "projectName": "Talon",
+  "projectDescription": "A 2D game development framework combining Raylib rendering with Wren scripting language",
+  "theme": "aspen",
+  "primaryColor": "#8B5CF6",
+  "lightColor": "#A78BFA",
+  "darkColor": "#6D28D9",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/wren-language",
+              "concepts/game-loop",
+              "concepts/hot-reload",
+              "concepts/project-structure"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/creating-your-first-game",
+              "guides/working-with-sprites",
+              "guides/handling-input",
+              "guides/2d-camera",
+              "guides/collision-detection",
+              "guides/using-modules"
+            ]
+          },
+          {
+            "group": "Building & Deployment",
+            "pages": [
+              "deployment/building-executables",
+              "deployment/building-wasm",
+              "deployment/docker-setup"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "advanced/dynamic-libraries",
+              "advanced/custom-bindings"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "CLI Commands",
+            "pages": [
+              "cli/run",
+              "cli/hot-reload",
+              "cli/init-exe",
+              "cli/init-wasm"
+            ]
+          },
+          {
+            "group": "Raylib Module",
+            "pages": [
+              "api/raylib/core",
+              "api/raylib/window",
+              "api/raylib/drawing",
+              "api/raylib/textures",
+              "api/raylib/text",
+              "api/raylib/shapes",
+              "api/raylib/input",
+              "api/raylib/camera",
+              "api/raylib/colors"
+            ]
+          },
+          {
+            "group": "Math Module",
+            "pages": [
+              "api/math"
+            ]
+          },
+          {
+            "group": "Data Types",
+            "pages": [
+              "api/types/vector2",
+              "api/types/vector3",
+              "api/types/rectangle",
+              "api/types/color",
+              "api/types/camera2d",
+              "api/types/texture2d"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Examples",
+        "groups": [
+          {
+            "group": "Game Examples",
+            "pages": [
+              "examples/basic-window",
+              "examples/asteroid-game",
+              "examples/breakout-game",
+              "examples/camera-example"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Write 2D games in Wren scripting language",
+    "Comprehensive Raylib API bindings",
+    "Hot reload for rapid development",
+    "Build executables for Linux/Windows via Docker",
+    "Compile to WebAssembly for browser deployment",
+    "Extend with dynamic libraries (.so, .dll)",
+    "Built-in math utilities",
+    "Simple CLI interface"
+  ],
+  "publicApiSurface": [
+    "Raylib.initWindow(width, height, title)",
+    "Raylib.closeWindow()",
+    "Raylib.windowShouldClose()",
+    "Raylib.beginDrawing()",
+    "Raylib.endDrawing()",
+    "Raylib.clearBackground(color)",
+    "Raylib.drawText(text, x, y, size, color)",
+    "Raylib.drawTexture(texture, x, y, color)",
+    "Raylib.drawRectangle(x, y, width, height, color)",
+    "Raylib.drawCircle(x, y, radius, color)",
+    "Raylib.loadTexture(path)",
+    "Raylib.loadRenderTexture(width, height)",
+    "Raylib.isKeyDown(key)",
+    "Raylib.isKeyPressed(key)",
+    "Raylib.isMouseButtonPressed(button)",
+    "Raylib.getMousePosition()",
+    "Raylib.setTargetFPS(fps)",
+    "Raylib.getFrameTime()",
+    "Raylib.beginMode2D(camera)",
+    "Raylib.endMode2D()",
+    "Vector2.new(x, y)",
+    "Vector3.new(x, y, z)",
+    "Rectangle.new(x, y, width, height)",
+    "Color.new(r, g, b, a)",
+    "Camera2D.new(offset, target, rotation, zoom)",
+    "Math.sin(x)",
+    "Math.cos(x)",
+    "Math.sqrt(x)",
+    "Build.shouldStop()"
+  ]
+}
