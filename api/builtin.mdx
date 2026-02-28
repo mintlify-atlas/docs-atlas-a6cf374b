@@ -1,0 +1,117 @@
+---
+title: "Builtin Module"
+description: "Core utilities for Talon applications including hot reload support"
+---
+
+The `builtin` module provides essential utilities that are built into the Talon runtime. These functions help with application lifecycle management, particularly during development with hot reload.
+
+## Import
+
+```wren
+import "builtin" for Build
+```
+
+## Build Class
+
+The `Build` class provides utilities for controlling the application lifecycle.
+
+### shouldStop()
+
+Checks if the application should stop execution. This is primarily used with hot reload to detect when files have changed and the application needs to restart.
+
+<ParamField path="return" type="Boolean">
+  Returns `true` if the application should stop, `false` otherwise
+</ParamField>
+
+**Usage:**
+
+```wren
+import "raylib" for Raylib, Color
+import "builtin" for Build
+
+Raylib.initWindow(800, 450, "Hot Reload Example")
+Raylib.setTargetFPS(60)
+
+while (!Raylib.windowShouldClose() && !Build.shouldStop()) {
+  Raylib.beginDrawing()
+  Raylib.clearBackground(Color.RayWhite)
+  Raylib.drawText("Press ESC to exit", 10, 10, 20, Color.DarkGray)
+  Raylib.endDrawing()
+}
+
+Raylib.closeWindow()
+```
+
+## Hot Reload Integration
+
+The `Build.shouldStop()` function is automatically triggered by Talon's hot reload system when running with the `--hot` flag. When a Wren file is modified, the function returns `true`, causing the game loop to exit gracefully so Talon can reload and restart the application.
+
+**Without hot reload:**
+```wren
+// Standard game loop
+while (!Raylib.windowShouldClose()) {
+  // Game logic
+}
+```
+
+**With hot reload support:**
+```wren
+// Hot reload-aware game loop
+while (!Raylib.windowShouldClose() && !Build.shouldStop()) {
+  // Game logic
+}
+```
+
+<Note>
+  Always include `Build.shouldStop()` in your game loop if you plan to use hot reload during development. This ensures your application can restart cleanly when files change.
+</Note>
+
+## Common Patterns
+
+### Development vs Production
+
+You can structure your code to only check for hot reload in development:
+
+```wren
+import "builtin" for Build
+
+var isDevelopment = true // Set based on your build config
+
+while (!Raylib.windowShouldClose()) {
+  if (isDevelopment && Build.shouldStop()) {
+    break
+  }
+  
+  // Game logic
+}
+```
+
+### Cleanup Before Reload
+
+Perform cleanup operations when hot reload is triggered:
+
+```wren
+import "builtin" for Build
+
+while (!Raylib.windowShouldClose()) {
+  if (Build.shouldStop()) {
+    // Clean up resources before reload
+    unloadAssets()
+    saveGameState()
+    break
+  }
+  
+  // Game logic
+}
+```
+
+## See Also
+
+<CardGroup cols={2}>
+  <Card title="Hot Reload" icon="fire" href="/concepts/hot-reload">
+    Learn about hot reload functionality
+  </Card>
+  <Card title="Game Loop" icon="rotate" href="/concepts/game-loop">
+    Understanding the game loop pattern
+  </Card>
+</CardGroup>

@@ -101,6 +101,13 @@
             ]
           },
           {
+            "group": "Core Modules",
+            "pages": [
+              "api/builtin",
+              "api/embed"
+            ]
+          },
+          {
             "group": "Data Types",
             "pages": [
               "api/types/vector2",

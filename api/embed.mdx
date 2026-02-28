@@ -1,0 +1,248 @@
+---
+title: "Embed Module"
+description: "Load and use functions from dynamic libraries (.so, .dll) in your Talon games"
+---
+
+The `embed` module allows you to extend Talon with custom C/C++ functions by loading them from shared libraries. This enables you to integrate existing native code or write performance-critical functionality in C.
+
+## Import
+
+```wren
+import "embed" for Load
+```
+
+## Load Class
+
+The `Load` class provides functionality for loading foreign functions from dynamic libraries.
+
+### foreignFunction(name, signature, symbolName)
+
+Loads a function from a dynamic library and makes it available to Wren code.
+
+<ParamField path="name" type="String" required>
+  The Wren signature for the function. Must follow the format: `ClassName.methodName(_,_,...)` where each `_` represents a parameter.
+</ParamField>
+
+<ParamField path="signature" type="String" required>
+  The path to the dynamic library file. Use `.dll` for Windows or `.so` for Linux. The file should be in the same directory as your Wren script.
+</ParamField>
+
+<ParamField path="symbolName" type="String" required>
+  The C symbol name to load from the library. Must follow Talon's foreign function naming convention: `wren_c_embed_<functionname>`.
+</ParamField>
+
+## Basic Usage
+
+Here's a complete example of loading and using a C function:
+
+### C Implementation
+
+```c add.c
+#include <wren.h>
+
+void wren_c_embed_add(WrenVM* vm) {
+  double a = wrenGetSlotDouble(vm, 1);
+  double b = wrenGetSlotDouble(vm, 2);
+  wrenSetSlotDouble(vm, 0, a + b);
+}
+```
+
+### Building the Library
+
+```zig build.zig
+const std = @import("std");
+
+pub fn build(b: *std.Build) void {
+    const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
+
+    const lib = b.addSharedLibrary(.{
+        .name = "add",
+        .target = target,
+        .optimize = optimize,
+    });
+
+    lib.addCSourceFile(.{
+        .file = b.path("add.c"),
+    });
+    
+    lib.linkLibC();
+    b.installArtifact(lib);
+}
+```
+
+Build with:
+```bash
+zig build
+```
+
+### Wren Usage
+
+```wren game.wren
+import "embed" for Load
+
+class C {
+  foreign static add(a, b)
+}
+
+Load.foreignFunction("C.add(_,_)", "add.dll", "wren_c_embed_add")
+
+// Now you can use it
+var result = C.add(5, 3)
+System.print("5 + 3 = %(result)") // Prints: 5 + 3 = 8
+```
+
+## Wren Slot API
+
+When implementing foreign functions, use the Wren C API to interact with parameters and return values:
+
+### Getting Parameters
+
+```c
+// Get parameters (slots start at 1)
+double num = wrenGetSlotDouble(vm, 1);
+const char* str = wrenGetSlotString(vm, 1);
+bool flag = wrenGetSlotBool(vm, 1);
+```
+
+### Setting Return Values
+
+```c
+// Set return value in slot 0
+wrenSetSlotDouble(vm, 0, 42.0);
+wrenSetSlotString(vm, 0, "Hello");
+wrenSetSlotBool(vm, 0, true);
+```
+
+## Advanced Examples
+
+### Multiple Parameters
+
+```c
+void wren_c_embed_multiply(WrenVM* vm) {
+  double x = wrenGetSlotDouble(vm, 1);
+  double y = wrenGetSlotDouble(vm, 2);
+  double z = wrenGetSlotDouble(vm, 3);
+  wrenSetSlotDouble(vm, 0, x * y * z);
+}
+```
+
+```wren
+class Math {
+  foreign static multiply(x, y, z)
+}
+
+Load.foreignFunction("Math.multiply(_,_,_)", "math.dll", "wren_c_embed_multiply")
+var result = Math.multiply(2, 3, 4) // Returns 24
+```
+
+### String Operations
+
+```c
+void wren_c_embed_concat(WrenVM* vm) {
+  const char* a = wrenGetSlotString(vm, 1);
+  const char* b = wrenGetSlotString(vm, 2);
+  
+  // Allocate buffer for concatenation
+  size_t len = strlen(a) + strlen(b) + 1;
+  char* result = malloc(len);
+  strcpy(result, a);
+  strcat(result, b);
+  
+  wrenSetSlotString(vm, 0, result);
+  free(result);
+}
+```
+
+```wren
+class Str {
+  foreign static concat(a, b)
+}
+
+Load.foreignFunction("Str.concat(_,_)", "string.dll", "wren_c_embed_concat")
+var greeting = Str.concat("Hello, ", "World!") // Returns "Hello, World!"
+```
+
+## Platform Considerations
+
+<Tabs>
+  <Tab title="Linux">
+    Use `.so` extension for shared libraries:
+    ```wren
+    Load.foreignFunction("C.add(_,_)", "add.so", "wren_c_embed_add")
+    ```
+    
+    Ensure the library is in the same directory as your Wren script or in a standard library path.
+  </Tab>
+  
+  <Tab title="Windows">
+    Use `.dll` extension for dynamic libraries:
+    ```wren
+    Load.foreignFunction("C.add(_,_)", "add.dll", "wren_c_embed_add")
+    ```
+    
+    Place the DLL in the same directory as your executable or Wren script.
+  </Tab>
+</Tabs>
+
+<Warning>
+  The embed system only works when running Talon natively (not in WASM). WebAssembly builds cannot load dynamic libraries due to browser security restrictions.
+</Warning>
+
+## Symbol Naming Convention
+
+All foreign function symbols must follow this pattern:
+```
+wren_c_embed_<functionname>
+```
+
+For example:
+- `wren_c_embed_add`
+- `wren_c_embed_multiply`
+- `wren_c_embed_processImage`
+
+This naming convention allows Talon to locate and bind the functions correctly.
+
+## Error Handling
+
+Foreign functions should handle errors gracefully:
+
+```c
+void wren_c_embed_divide(WrenVM* vm) {
+  double a = wrenGetSlotDouble(vm, 1);
+  double b = wrenGetSlotDouble(vm, 2);
+  
+  if (b == 0.0) {
+    // Set error and abort
+    wrenSetSlotString(vm, 0, "Division by zero");
+    wrenAbortFiber(vm, 0);
+    return;
+  }
+  
+  wrenSetSlotDouble(vm, 0, a / b);
+}
+```
+
+## Performance Tips
+
+<Tip>
+  Use foreign functions for computationally intensive operations like:
+  - Complex mathematical calculations
+  - Image processing
+  - Physics simulations
+  - Audio processing
+  - Network operations
+  
+  Keep simple game logic in Wren for maintainability.
+</Tip>
+
+## See Also
+
+<CardGroup cols={2}>
+  <Card title="Dynamic Libraries" icon="plug" href="/advanced/dynamic-libraries">
+    Complete guide to creating dynamic libraries
+  </Card>
+  <Card title="Custom Bindings" icon="code" href="/advanced/custom-bindings">
+    Creating custom Raylib bindings
+  </Card>
+</CardGroup>
